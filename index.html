@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <style>
+            #maze {
+                font-size: 30px;
+                border: 0.1em solid black;
+                overflow: auto;
+            }
+
+            #maze div {
+                border: 0.1em solid black;
+                box-sizing: border-box;
+                float: left;
+                height: 1em;
+                width: 1em;
+            }
+
+            #maze div[data-visited] {
+                background-color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="maze"></div>
+
+        <button id="start">Start!</button>
+
+        <script src="maze.js"></script>
+    </body>
+</html>
