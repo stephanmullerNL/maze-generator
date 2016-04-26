@@ -3,7 +3,19 @@
     var MAZE = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
         WIDTH = 3,
-        HEIGHT = 3;
+        HEIGHT = 3,
+
+        DIRECTIONS = ['down', 'up', 'left', 'right'],
+        STEPS = {
+            left: -1,
+            right: 1,
+            up: -WIDTH,
+            down: WIDTH
+        },
+
+        // TODO: make customizable?
+        START_TILE = 0,
+        START_DIRECTION = 'right';
 
     // Temp
     var count;
@@ -16,7 +28,7 @@
         count = 0;
         createMaze();
 
-        console.log('Finished!', walk(null, 1));
+        console.log('Finished!', walk());
     }
 
     function createMaze() {
@@ -30,50 +42,55 @@
         MAZE.style.width = '' + WIDTH + 'em';
     }
 
-    function walk(previous, current) {
-        var allowedSteps = getUnvisitedSiblings(current);
+    function walk() {
+        var tile = START_TILE;
 
-        markVisited(current);
-        removeWall(previous, current);
+        function takeStep(direction) {
+            var allowedDirections;
 
-        if (allowedSteps.length > 0 && count++ < WIDTH * HEIGHT) {
-            var next = takeRandomStep(current, allowedSteps);
+            tile = getTileNumber(tile, direction);
+            allowedDirections = getAllowedDirections(tile);
 
-            //if()
+            markVisited(tile);
 
-            return next;
-        } else {
-            return current;
+            if (allowedDirections.length > 0 && count++ < WIDTH * HEIGHT) {
+                var rnd = Math.floor(Math.random() * allowedDirections.length),
+                    next = allowedDirections[rnd];
+
+                //removeWalls(tile, next, direction);
+
+
+                return takeStep(next);
+            } else {
+                // End of the line, trickle back down
+                return tile;
+            }
         }
+
+        return takeStep(START_DIRECTION);
     }
 
-    function takeRandomStep(current, steps) {
-        var rnd = Math.floor(Math.random() * steps.length),
-            next = steps[rnd];
-
-        return walk(current, next);
-    }
-
-    function getUnvisitedSiblings(current) {
-        var siblingSteps = [-1, 1, -WIDTH, WIDTH];
-
-        return siblingSteps
-            .map(getTileNumber)
+    function getAllowedDirections(current) {
+        return DIRECTIONS
             .filter(onlyAdjacentTiles)
             .filter(notVisited);
 
-        function getTileNumber(step) {
-            return current + step;
-        }
+        function onlyAdjacentTiles(direction) {
+            var tile = getTileNumber(current, direction);
 
-        function onlyAdjacentTiles(tile) {
             return (getRow(tile) === getRow(current) || getColumn(tile) === getColumn(current));
         }
 
-        function notVisited(tile) {
-            var adjacentTile = getTileElement(tile);
-            return adjacentTile && !adjacentTile.dataset.visited;
+        function notVisited(direction) {
+            var tile = getTileNumber(current, direction),
+                tileElement = getTileElement(tile);
+
+            return tileElement && tileElement.dataset.visited !== "true";
         }
+    }
+
+    function getTileNumber(current, direction) {
+        return current + STEPS[direction];
     }
 
     function getTileElement(tile) {
@@ -81,7 +98,7 @@
     }
 
     function getRow(tile) {
-        return Math.ceil((tile)/ WIDTH)
+        return Math.ceil(tile/ WIDTH)
     }
 
     function getColumn(tile) {
@@ -92,8 +109,8 @@
         getTileElement(tile).dataset.visited = 'true'
     }
 
-    function removeWall(previous, current) {
-
+    function removeWalls(previous, current) {
+        //var
     }
 
     init();
