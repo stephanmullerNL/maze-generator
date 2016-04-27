@@ -5,8 +5,7 @@
         WIDTH = 26,
         HEIGHT = 26,
 
-        DIRECTIONS = ['left', 'right', 'up', 'down'],
-        STEPS = {
+        DIRECTIONS = {
             left: -1,
             right: 1,
             up: -WIDTH,
@@ -60,9 +59,9 @@
     }
 
     function getAllowedDirections(currentTile) {
-        var allowed = DIRECTIONS
-            .filter(onlyAdjacentTiles)
-            .filter(notVisited);
+        var allowed = Object.keys(DIRECTIONS)
+                        .filter(onlyAdjacentTiles)
+                        .filter(notVisited);
 
         return (allowed.length > 0) ? allowed : null;
 
@@ -82,7 +81,7 @@
     }
 
     function getTileNumber(currentTile, direction) {
-        return currentTile + STEPS[direction];
+        return currentTile + DIRECTIONS[direction];
     }
 
     function getTileElement(tile) {
@@ -100,11 +99,12 @@
     // Takes any direction and returns the opposite by performing magic on the array
     // index. 0 <-> 1, 2 <-> 3, etc.
     function getOppositeDirection(direction) {
-        var directionIndex = DIRECTIONS.indexOf(direction),
-            rest = directionIndex % 2,
-            inverse = directionIndex + 1 - (2 * rest);
+        var directions = Object.keys(DIRECTIONS),
+            index = directions.indexOf(direction),
+            rest = index % 2,
+            inverse = index + 1 - (2 * rest);
 
-        return DIRECTIONS[inverse];
+        return directions[inverse];
     }
 
     function removeWall(tile, direction) {
