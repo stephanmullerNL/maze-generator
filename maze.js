@@ -70,27 +70,27 @@
         return takeStep(START_DIRECTION);
     }
 
-    function getAllowedDirections(current) {
+    function getAllowedDirections(tile) {
         return DIRECTIONS
             .filter(onlyAdjacentTiles)
             .filter(notVisited);
 
         function onlyAdjacentTiles(direction) {
-            var tile = getTileNumber(current, direction);
+            var tile = getTileNumber(tile, direction);
 
-            return (getRow(tile) === getRow(current) || getColumn(tile) === getColumn(current));
+            return (getRow(tile) === getRow(tile) || getColumn(tile) === getColumn(tile));
         }
 
         function notVisited(direction) {
-            var tile = getTileNumber(current, direction),
+            var tile = getTileNumber(tile, direction),
                 tileElement = getTileElement(tile);
 
             return tileElement && tileElement.dataset.visited !== "true";
         }
     }
 
-    function getTileNumber(current, direction) {
-        return current + STEPS[direction];
+    function getTileNumber(currentTile, direction) {
+        return currentTile + STEPS[direction];
     }
 
     function getTileElement(tile) {
@@ -98,7 +98,7 @@
     }
 
     function getRow(tile) {
-        return Math.ceil(tile/ WIDTH)
+        return Math.ceil(tile / WIDTH)
     }
 
     function getColumn(tile) {
