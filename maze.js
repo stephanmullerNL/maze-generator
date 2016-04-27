@@ -1,9 +1,9 @@
-(function () {
+//(function () {
 
-    var MAZE = document.getElementById('maze'),
+    var MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 26,
-        HEIGHT = 26,
+        WIDTH = 25,
+        HEIGHT = 25,
 
         DIRECTIONS = {
             left: -1,
@@ -11,51 +11,70 @@
             up: -WIDTH,
             down: WIDTH
         },
+        DEFAULT_TILE = {
+            visited: false,
+            walls: ['left', 'right', 'up', 'down']
+        },
 
         START_TILE = 0,
-        START_DIRECTION = 'right';
+        START_DIRECTION = 'right',
+
+        maze = [];
 
     function init() {
         START_BUTTON && START_BUTTON.addEventListener('click', start);
+        MAZE_ELEMENT.style.width = WIDTH + 'em';
+        MAZE_ELEMENT.style.height = HEIGHT + 'em';
     }
 
     function start() {
-        // TODO: generate maze first, then create visual representation
         createMaze();
 
-        var end = walk(START_TILE, START_DIRECTION);
+        var end = walk(START_TILE - 1, START_DIRECTION);
+
+        drawMaze();
 
         console.log(end);
     }
 
     function createMaze() {
-        MAZE.innerHTML = '';
-
-        for (var i = 0, tile; i < WIDTH * HEIGHT; i++) {
-            tile = document.createElement('div');
-            MAZE.appendChild(tile);
+        for(var i = 0; i < WIDTH * HEIGHT; i++) {
+            maze[i] = JSON.parse(JSON.stringify(DEFAULT_TILE));
         }
+    }
 
-        MAZE.style.width = WIDTH + 'em';
+    function drawMaze() {
+        MAZE_ELEMENT.innerHTML = '';
+
+        maze.forEach(function(tile) {
+            var tileElement = document.createElement('div');
+
+            tile.walls.forEach(function (wall) {
+                tileElement.className += ` ${wall}`;
+            });
+
+            MAZE_ELEMENT.appendChild(tileElement);
+        });
     }
 
     function walk(from, direction) {
         var allowedDirections,
             lastStep,
-            tile = getTileNumber(from, direction);
+            tileNumber = getTileNumber(from, direction);
 
-        removeWall(tile, getOppositeDirection(direction));
+        removeWall(tileNumber, getOppositeDirection(direction));
+        maze[tileNumber].visited = true;
 
-        while(allowedDirections = getAllowedDirections(tile)) {
+        while(allowedDirections = getAllowedDirections(tileNumber)) {
             var rnd = Math.floor(Math.random() * allowedDirections.length),
                 nextDirection = allowedDirections[rnd];
 
-            removeWall(tile, nextDirection);
+            removeWall(tileNumber, nextDirection);
 
-            lastStep = walk(tile, nextDirection);
+            lastStep = walk(tileNumber, nextDirection);
         }
 
-        return lastStep || tile;
+        return lastStep || tileNumber;
     }
 
     function getAllowedDirections(currentTile) {
@@ -66,17 +85,16 @@
         return (allowed.length > 0) ? allowed : null;
 
         function onlyAdjacentTiles(direction) {
-            var tile = getTileNumber(currentTile, direction);
+            var tileNumber = getTileNumber(currentTile, direction);
 
-            return (getRow(tile) === getRow(currentTile) || getColumn(tile) === getColumn(currentTile));
+            return (getRow(tileNumber) === getRow(currentTile) || getColumn(tileNumber) === getColumn(currentTile));
         }
 
         function notVisited(direction) {
-            var tile = getTileNumber(currentTile, direction),
-                tileElement = getTileElement(tile);
+            var tileNumber = getTileNumber(currentTile, direction),
+                tile = maze[tileNumber];
 
-            // TODO: Don't use the DOM to store information, silly
-            return tileElement && !tileElement.className;
+            return tile && !tile.visited;
         }
     }
 
@@ -84,16 +102,12 @@
         return currentTile + DIRECTIONS[direction];
     }
 
-    function getTileElement(tile) {
-        return MAZE.querySelector(`div:nth-child(${tile})`);
-    }
-
     function getRow(tile) {
-        return Math.ceil(tile / WIDTH)
+        return Math.ceil((tile + 1) / WIDTH);
     }
 
     function getColumn(tile) {
-        return Math.floor(tile % WIDTH);
+        return Math.floor((tile + 1) % WIDTH);
     }
 
     // Takes any direction and returns the opposite by performing magic on the array
@@ -108,8 +122,11 @@
     }
 
     function removeWall(tile, direction) {
-        getTileElement(tile).className += ` ${direction}`;
+        var walls = maze[tile].walls,
+            index = walls.indexOf(direction);
+
+        return walls.splice(index, 1);
     }
 
     init();
-}());
+//}());
