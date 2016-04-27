@@ -2,8 +2,8 @@
 
     var MAZE = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 16,
-        HEIGHT = 16,
+        WIDTH = 26,
+        HEIGHT = 26,
 
         DIRECTIONS = ['left', 'right', 'up', 'down'],
         STEPS = {
@@ -13,7 +13,6 @@
             down: WIDTH
         },
 
-        // TODO: make customizable?
         START_TILE = 0,
         START_DIRECTION = 'right';
 
@@ -22,11 +21,11 @@
     }
 
     function start() {
+        // TODO: generate maze first, then create visual representation
         createMaze();
 
         var end = walk(START_TILE, START_DIRECTION);
 
-        getTileElement(end).className += ' finish';
         console.log(end);
     }
 
@@ -38,7 +37,7 @@
             MAZE.appendChild(tile);
         }
 
-        MAZE.style.width = '' + WIDTH + 'em';
+        MAZE.style.width = WIDTH + 'em';
     }
 
     function walk(from, direction) {
@@ -57,7 +56,6 @@
             lastStep = walk(tile, nextDirection);
         }
 
-        // End of the line, trickle back down
         return lastStep || tile;
     }
 
@@ -78,6 +76,7 @@
             var tile = getTileNumber(currentTile, direction),
                 tileElement = getTileElement(tile);
 
+            // TODO: Don't use the DOM to store information, silly
             return tileElement && !tileElement.className;
         }
     }
