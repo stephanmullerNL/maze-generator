@@ -2,8 +2,8 @@
 
     var MAZE = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 3,
-        HEIGHT = 3,
+        WIDTH = 16,
+        HEIGHT = 16,
 
         DIRECTIONS = ['left', 'right', 'up', 'down'],
         STEPS = {
@@ -17,18 +17,17 @@
         START_TILE = 0,
         START_DIRECTION = 'right';
 
-    // Temp
-    var count;
-
     function init() {
         START_BUTTON && START_BUTTON.addEventListener('click', start);
     }
 
     function start() {
-        count = 0;
         createMaze();
 
-        console.log('Finished!', walk());
+        var end = walk(START_TILE, START_DIRECTION);
+
+        getTileElement(end).className += ' finish';
+        console.log(end);
     }
 
     function createMaze() {
@@ -42,29 +41,24 @@
         MAZE.style.width = '' + WIDTH + 'em';
     }
 
-    function walk() {
-        function takeStep(from, direction) {
-            var allowedDirections,
-                lastStep,
-                tile = getTileNumber(from, direction);
+    function walk(from, direction) {
+        var allowedDirections,
+            lastStep,
+            tile = getTileNumber(from, direction);
 
-            removeWall(tile, getOppositeDirection(direction));
+        removeWall(tile, getOppositeDirection(direction));
 
-            while(allowedDirections = getAllowedDirections(tile)) {
-                var rnd = Math.floor(Math.random() * allowedDirections.length),
-                    nextDirection = allowedDirections[rnd];
+        while(allowedDirections = getAllowedDirections(tile)) {
+            var rnd = Math.floor(Math.random() * allowedDirections.length),
+                nextDirection = allowedDirections[rnd];
 
-                removeWall(tile, nextDirection);
+            removeWall(tile, nextDirection);
 
-                lastStep = takeStep(tile, nextDirection);
-            }
-
-            // End of the line, trickle back down
-            return lastStep || tile;
+            lastStep = walk(tile, nextDirection);
         }
 
-        // TODO: Mark last tile's exit point
-        return takeStep(START_TILE, START_DIRECTION);
+        // End of the line, trickle back down
+        return lastStep || tile;
     }
 
     function getAllowedDirections(currentTile) {

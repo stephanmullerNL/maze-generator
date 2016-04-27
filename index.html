@@ -2,13 +2,13 @@
     <head>
         <style>
             #maze {
-                font-size: 30px;
-                border: 0.1em solid black;
+                font-size: 20px;
                 overflow: auto;
             }
 
             #maze div {
-                border: 0.1em solid black;
+                background-color: black;
+                border: 1px solid black;
                 box-sizing: border-box;
                 float: left;
                 height: 1em;
@@ -16,23 +16,27 @@
             }
 
             #maze div[class]{
-                background-color: red;
+                background-color: white;
             }
 
             #maze div.left {
-                border-left-color: red;
+                border-left-color: white;
             }
 
             #maze div.right {
-                border-right-color: red;
+                border-right-color: white;
             }
 
             #maze div.up {
-                border-top-color: red;
+                border-top-color: white;
             }
 
             #maze div.down {
-                border-bottom-color: red;
+                border-bottom-color: white;
+            }
+
+            #maze div.finish {
+                background: yellow !important;
             }
 
         </style>
