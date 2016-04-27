@@ -5,7 +5,7 @@
         WIDTH = 3,
         HEIGHT = 3,
 
-        DIRECTIONS = ['down', 'up', 'left', 'right'],
+        DIRECTIONS = ['left', 'right', 'up', 'down'],
         STEPS = {
             left: -1,
             right: 1,
@@ -51,14 +51,13 @@
             tile = getTileNumber(tile, direction);
             allowedDirections = getAllowedDirections(tile);
 
-            markVisited(tile);
+            markTile('in', tile, direction);
 
             if (allowedDirections.length > 0 && count++ < WIDTH * HEIGHT) {
                 var rnd = Math.floor(Math.random() * allowedDirections.length),
                     next = allowedDirections[rnd];
 
-                //removeWalls(tile, next, direction);
-
+                markTile('out', tile, next);
 
                 return takeStep(next);
             } else {
@@ -70,22 +69,22 @@
         return takeStep(START_DIRECTION);
     }
 
-    function getAllowedDirections(tile) {
+    function getAllowedDirections(currentTile) {
         return DIRECTIONS
             .filter(onlyAdjacentTiles)
             .filter(notVisited);
 
-        function onlyAdjacentTiles(direction) {
-            var tile = getTileNumber(tile, direction);
+        function onlyAdjacentTiles(direction, all) {
+            var tile = getTileNumber(currentTile, direction);
 
-            return (getRow(tile) === getRow(tile) || getColumn(tile) === getColumn(tile));
+            return (getRow(tile) === getRow(currentTile) || getColumn(tile) === getColumn(currentTile));
         }
 
-        function notVisited(direction) {
-            var tile = getTileNumber(tile, direction),
+        function notVisited(direction, all) {
+            var tile = getTileNumber(currentTile, direction),
                 tileElement = getTileElement(tile);
 
-            return tileElement && tileElement.dataset.visited !== "true";
+            return tileElement && !tileElement.dataset.in;
         }
     }
 
@@ -105,12 +104,22 @@
         return Math.floor(tile % WIDTH);
     }
 
-    function markVisited(tile) {
-        getTileElement(tile).dataset.visited = 'true'
+    // Takes any direction and returns the opposite by performing magic on the array
+    // index. 0 <-> 1, 2 <-> 3, etc.
+    function getOppositeDirection(direction) {
+        var directionIndex = DIRECTIONS.indexOf(direction),
+            rest = directionIndex % 2,
+            inverse = directionIndex + 1 - (2 * rest);
+
+        return DIRECTIONS[inverse];
     }
 
-    function removeWalls(previous, current) {
-        //var
+    function markTile(movement, tile, direction) {
+        // When coming in by moving "right", we have to mark the left side of the
+        // tile as the entrance. For exit we don't need to reverse
+        var side = (movement === 'in') ? getOppositeDirection(direction) : direction;
+
+        getTileElement(tile).dataset[movement] = side;
     }
 
     init();
