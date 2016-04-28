@@ -1,9 +1,9 @@
-//(function () {
+(function () {
 
     var MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 25,
-        HEIGHT = 25,
+        WIDTH = 50,
+        HEIGHT = 50,
 
         DIRECTIONS = {
             left: -1,
@@ -22,7 +22,8 @@
         maze = [];
 
     function init() {
-        START_BUTTON && START_BUTTON.addEventListener('click', start);
+        START_BUTTON.addEventListener('click', start);
+
         MAZE_ELEMENT.style.width = WIDTH + 'em';
         MAZE_ELEMENT.style.height = HEIGHT + 'em';
     }
@@ -31,10 +32,9 @@
         createMaze();
 
         var end = walk(START_TILE - 1, START_DIRECTION);
+        console.log(end);
 
         drawMaze();
-
-        console.log(end);
     }
 
     function createMaze() {
@@ -46,11 +46,15 @@
     function drawMaze() {
         MAZE_ELEMENT.innerHTML = '';
 
-        maze.forEach(function(tile) {
+        maze.forEach(function(tile, index) {
             var tileElement = document.createElement('div');
 
             tile.walls.forEach(function (wall) {
                 tileElement.className += ` ${wall}`;
+            });
+
+            tileElement.addEventListener('click', function() {
+                tile.exit = true;
             });
 
             MAZE_ELEMENT.appendChild(tileElement);
@@ -65,6 +69,7 @@
         removeWall(tileNumber, getOppositeDirection(direction));
         maze[tileNumber].visited = true;
 
+        /*jshint boss:true */
         while(allowedDirections = getAllowedDirections(tileNumber)) {
             var rnd = Math.floor(Math.random() * allowedDirections.length),
                 nextDirection = allowedDirections[rnd];
@@ -129,4 +134,4 @@
     }
 
     init();
-//}());
+}());
