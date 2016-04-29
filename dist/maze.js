@@ -9,21 +9,22 @@ var Maze = function () {
     function Maze(width, height) {
         _classCallCheck(this, Maze);
 
+        // TODO: don't use objects but simply 1 for wall and 0 for path
         var DEFAULT_TILE = {
             visited: false,
             walls: ['left', 'right', 'up', 'down']
         };
 
-        this.width = width;
-        this.height = height;
-        this.tiles = [];
-
         this._DIRECTIONS = {
             left: -1,
             right: 1,
-            up: -this.width,
-            down: this.width
+            up: -width,
+            down: width
         };
+
+        this.width = width;
+        this.height = height;
+        this.tiles = [];
 
         for (var i = 0; i < width * height; i++) {
             this.tiles[i] = JSON.parse(JSON.stringify(DEFAULT_TILE));
@@ -35,6 +36,7 @@ var Maze = function () {
         value: function getAllowedDirections(tile) {
             var _this = this;
 
+            // TODO: move check to getNextTile
             var onlyAdjacentTiles = function onlyAdjacentTiles(direction) {
                 var tileNumber = _this.getNextTile(tile, direction),
                     sameRow = _this.getRow(tileNumber) === _this.getRow(tile),
@@ -101,10 +103,17 @@ module.exports = Maze;
 },{}],2:[function(require,module,exports){
 'use strict';
 
+// TODO: split into modules
+// TODO: MazeGenerator class?
+// TODO: implement options object as argument
+// TODO: implement maze solver
 (function () {
 
     var Maze = require('./Maze.js'),
-        MAZE_ELEMENT = document.getElementById('maze'),
+
+
+    // TODO: put in one SETTINGS object
+    MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
         WIDTH = 50,
         HEIGHT = 50,
@@ -128,6 +137,7 @@ module.exports = Maze;
         drawMaze();
     }
 
+    // TODO: canvas?
     function drawMaze() {
         MAZE_ELEMENT.innerHTML = '';
 
@@ -146,6 +156,7 @@ module.exports = Maze;
         });
     }
 
+    // TODO: move to separate file, implement variations (depth first, breadth first, stacked, recursive)
     function walk(from, direction) {
         var allowedDirections,
             lastStep,

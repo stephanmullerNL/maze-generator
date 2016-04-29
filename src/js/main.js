@@ -1,7 +1,12 @@
+// TODO: split into modules
+// TODO: MazeGenerator class?
+// TODO: implement options object as argument
+// TODO: implement maze solver
 (function () {
 
     var Maze = require('./Maze.js'),
 
+        // TODO: put in one SETTINGS object
         MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
         WIDTH = 50,
@@ -29,6 +34,7 @@
     }
 
 
+    // TODO: canvas?
     function drawMaze() {
         MAZE_ELEMENT.innerHTML = '';
 
@@ -47,6 +53,7 @@
         });
     }
 
+    // TODO: move to separate file, implement variations (depth first, breadth first, stacked, recursive)
     function walk(from, direction) {
         var allowedDirections,
             lastStep,

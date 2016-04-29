@@ -1,21 +1,22 @@
 class Maze {
 
     constructor(width, height) {
+        // TODO: don't use objects but simply 1 for wall and 0 for path
         const DEFAULT_TILE = {
             visited: false,
             walls: ['left', 'right', 'up', 'down']
         };
 
-        this.width = width;
-        this.height = height;
-        this.tiles = [];
-
         this._DIRECTIONS = {
             left: -1,
             right: 1,
-            up: -this.width,
-            down: this.width
+            up: -width,
+            down: width
         };
+
+        this.width = width;
+        this.height = height;
+        this.tiles = [];
 
         for (let i = 0; i < width * height; i++) {
             this.tiles[i] = JSON.parse(JSON.stringify(DEFAULT_TILE));
@@ -23,6 +24,7 @@ class Maze {
     }
 
     getAllowedDirections(tile) {
+        // TODO: move check to getNextTile
         var onlyAdjacentTiles = (direction) => {
             var tileNumber = this.getNextTile(tile, direction),
                 sameRow = this.getRow(tileNumber) === this.getRow(tile),
