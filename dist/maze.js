@@ -1,25 +1,116 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Maze = function () {
+    function Maze(width, height) {
+        _classCallCheck(this, Maze);
+
+        var DEFAULT_TILE = {
+            visited: false,
+            walls: ['left', 'right', 'up', 'down']
+        };
+
+        this.width = width;
+        this.height = height;
+        this.tiles = [];
+
+        this._DIRECTIONS = {
+            left: -1,
+            right: 1,
+            up: -this.width,
+            down: this.width
+        };
+
+        for (var i = 0; i < width * height; i++) {
+            this.tiles[i] = JSON.parse(JSON.stringify(DEFAULT_TILE));
+        }
+    }
+
+    _createClass(Maze, [{
+        key: 'getAllowedDirections',
+        value: function getAllowedDirections(tile) {
+            var _this = this;
+
+            var onlyAdjacentTiles = function onlyAdjacentTiles(direction) {
+                var tileNumber = _this.getNextTile(tile, direction),
+                    sameRow = _this.getRow(tileNumber) === _this.getRow(tile),
+                    sameCol = _this.getColumn(tileNumber) === _this.getColumn(tile);
+
+                return sameRow || sameCol;
+            };
+
+            var notVisited = function notVisited(direction) {
+                var tileNumber = _this.getNextTile(tile, direction),
+                    nextTile = _this.tiles[tileNumber];
+
+                return nextTile && !nextTile.visited;
+            };
+
+            var allowed = Object.keys(this._DIRECTIONS).filter(onlyAdjacentTiles).filter(notVisited);
+
+            // Return null instead of empty array so we can use the method in a while condition
+            return allowed.length > 0 ? allowed : null;
+        }
+    }, {
+        key: 'getColumn',
+        value: function getColumn(tile) {
+            return Math.floor((tile + 1) % this.width);
+        }
+    }, {
+        key: 'getNextTile',
+        value: function getNextTile(tile, direction) {
+            return tile + this._DIRECTIONS[direction];
+        }
+
+        // Takes any direction and returns the opposite by performing magic on the array
+        // index. 0 <-> 1, 2 <-> 3, etc.
+
+    }, {
+        key: 'getOppositeDirection',
+        value: function getOppositeDirection(direction) {
+            var directions = Object.keys(this._DIRECTIONS),
+                index = directions.indexOf(direction),
+                opposite = index % 2 ? -1 : 1;
+
+            return directions[index + opposite];
+        }
+    }, {
+        key: 'getRow',
+        value: function getRow(tile) {
+            return Math.ceil((tile + 1) / this.width);
+        }
+    }, {
+        key: 'removeWall',
+        value: function removeWall(tile, direction) {
+            var walls = this.tiles[tile].walls,
+                index = walls.indexOf(direction);
+
+            return walls.splice(index, 1);
+        }
+    }]);
+
+    return Maze;
+}();
+
+module.exports = Maze;
+
+},{}],2:[function(require,module,exports){
+'use strict';
+
 (function () {
 
-    var MAZE_ELEMENT = document.getElementById('maze'),
+    var Maze = require('./Maze.js'),
+        MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
         WIDTH = 50,
         HEIGHT = 50,
-        DIRECTIONS = {
-        left: -1,
-        right: 1,
-        up: -WIDTH,
-        down: WIDTH
-    },
-        DEFAULT_TILE = {
-        visited: false,
-        walls: ['left', 'right', 'up', 'down']
-    },
         START_TILE = 0,
         START_DIRECTION = 'right',
-        maze = [];
+        maze;
 
     function init() {
         START_BUTTON.addEventListener('click', start);
@@ -29,7 +120,7 @@
     }
 
     function start() {
-        createMaze();
+        maze = new Maze(WIDTH, HEIGHT);
 
         var end = walk(START_TILE - 1, START_DIRECTION);
         console.log(end);
@@ -37,16 +128,10 @@
         drawMaze();
     }
 
-    function createMaze() {
-        for (var i = 0; i < WIDTH * HEIGHT; i++) {
-            maze[i] = JSON.parse(JSON.stringify(DEFAULT_TILE));
-        }
-    }
-
     function drawMaze() {
         MAZE_ELEMENT.innerHTML = '';
 
-        maze.forEach(function (tile, index) {
+        maze.tiles.forEach(function (tile) {
             var tileElement = document.createElement('div');
 
             tile.walls.forEach(function (wall) {
@@ -64,77 +149,28 @@
     function walk(from, direction) {
         var allowedDirections,
             lastStep,
-            tileNumber = getTileNumber(from, direction);
+            tile = maze.getNextTile(from, direction);
 
-        removeWall(tileNumber, getOppositeDirection(direction));
-        maze[tileNumber].visited = true;
+        maze.removeWall(tile, maze.getOppositeDirection(direction));
+        maze.tiles[tile].visited = true;
 
         /*jshint boss:true */
-        while (allowedDirections = getAllowedDirections(tileNumber)) {
+        while (allowedDirections = maze.getAllowedDirections(tile)) {
             var rnd = Math.floor(Math.random() * allowedDirections.length),
                 nextDirection = allowedDirections[rnd];
 
-            removeWall(tileNumber, nextDirection);
+            maze.removeWall(tile, nextDirection);
 
-            lastStep = walk(tileNumber, nextDirection);
+            lastStep = walk(tile, nextDirection);
         }
 
-        return lastStep || tileNumber;
-    }
-
-    function getAllowedDirections(currentTile) {
-        var allowed = Object.keys(DIRECTIONS).filter(onlyAdjacentTiles).filter(notVisited);
-
-        return allowed.length > 0 ? allowed : null;
-
-        function onlyAdjacentTiles(direction) {
-            var tileNumber = getTileNumber(currentTile, direction);
-
-            return getRow(tileNumber) === getRow(currentTile) || getColumn(tileNumber) === getColumn(currentTile);
-        }
-
-        function notVisited(direction) {
-            var tileNumber = getTileNumber(currentTile, direction),
-                tile = maze[tileNumber];
-
-            return tile && !tile.visited;
-        }
-    }
-
-    function getTileNumber(currentTile, direction) {
-        return currentTile + DIRECTIONS[direction];
-    }
-
-    function getRow(tile) {
-        return Math.ceil((tile + 1) / WIDTH);
-    }
-
-    function getColumn(tile) {
-        return Math.floor((tile + 1) % WIDTH);
-    }
-
-    // Takes any direction and returns the opposite by performing magic on the array
-    // index. 0 <-> 1, 2 <-> 3, etc.
-    function getOppositeDirection(direction) {
-        var directions = Object.keys(DIRECTIONS),
-            index = directions.indexOf(direction),
-            rest = index % 2,
-            inverse = index + 1 - 2 * rest;
-
-        return directions[inverse];
-    }
-
-    function removeWall(tile, direction) {
-        var walls = maze[tile].walls,
-            index = walls.indexOf(direction);
-
-        return walls.splice(index, 1);
+        return lastStep || tile;
     }
 
     init();
 })();
 
-},{}]},{},[1])
+},{"./Maze.js":1}]},{},[2])
 
 
 //# sourceMappingURL=maze.js.map
