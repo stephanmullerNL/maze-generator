@@ -79,6 +79,7 @@ var Maze = function () {
 
             /*jshint boss:true */
             while (allowedDirections = this.getAllowedDirections(room)) {
+                // TODO: Add option for horizontal/vertical bias
                 var rnd = Math.floor(Math.random() * allowedDirections.length),
                     nextDirection = allowedDirections[rnd];
 

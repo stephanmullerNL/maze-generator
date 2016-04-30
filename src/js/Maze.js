@@ -65,6 +65,7 @@ class Maze {
 
         /*jshint boss:true */
         while(allowedDirections = this.getAllowedDirections(room)) {
+            // TODO: Add option for horizontal/vertical bias
             let rnd = Math.floor(Math.random() * allowedDirections.length),
                 nextDirection = allowedDirections[rnd];
 
