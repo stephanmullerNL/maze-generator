@@ -35,6 +35,8 @@ var Maze = function () {
                 wallSize = 5,
                 tileSize = (element.width - (this.width + 1) * wallSize) / this.width;
 
+            canvas.clearRect(0, 0, element.width, element.height);
+
             this.tiles.forEach(function (value, tile) {
                 var col = _this.getColumn(tile),
                     row = _this.getRow(tile),
@@ -187,8 +189,8 @@ module.exports = Maze;
     // TODO: put in one SETTINGS object
     MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 2,
-        HEIGHT = 2,
+        WIDTH = 20,
+        HEIGHT = 20,
         START_TILE = 1,
         START_DIRECTION = 'right',
         maze;

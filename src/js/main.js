@@ -9,8 +9,8 @@
         // TODO: put in one SETTINGS object
         MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 2,
-        HEIGHT = 2,
+        WIDTH = 20,
+        HEIGHT = 20,
 
         START_TILE = 1,
         START_DIRECTION = 'right',

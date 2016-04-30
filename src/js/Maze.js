@@ -23,6 +23,8 @@ class Maze {
             wallSize = 5,
             tileSize = (element.width - ((this.width + 1) * wallSize)) / this.width;
 
+        canvas.clearRect(0, 0, element.width, element.height);
+
         this.tiles.forEach((value, tile) => {
             const col = this.getColumn(tile),
                 row = this.getRow(tile),
