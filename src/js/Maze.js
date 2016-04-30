@@ -1,15 +1,15 @@
 class Maze {
 
     constructor(width, height) {
+        this.width = width;
+        this.height = height;
+
         this._DIRECTIONS = {
             left: -1,
             right: 1,
-            up: -width,
-            down: width
+            up: -this.columns,
+            down: this.columns
         };
-
-        this.width = width;
-        this.height = height;
 
         this.tiles = new Array((width * 2 + 1) * (height * 2 + 1)).fill(1);
     }
@@ -33,9 +33,42 @@ class Maze {
 
             canvas.fillStyle = ['white', 'black'][value];
             canvas.fillRect(x, y, width, height);
-        })
+        });
     }
 
+    generatePath(start, direction) {
+        // TODO: move to separate file?
+        // TODO: implement variations (depth first, breadth first, stacked, recursive)
+
+        return this.walk(start);
+    }
+
+    walk(from, direction) {
+        var allowedDirections,
+            lastStep,
+            tile = direction ? this.getNextTile(from, direction) : from;
+
+        // Mark visited
+        this.tiles[tile] = 0;
+
+        /*jshint boss:true */
+        while(allowedDirections = this.getAllowedDirections(tile)) {
+            var rnd = Math.floor(Math.random() * allowedDirections.length),
+                nextDirection = allowedDirections[rnd];
+
+            //maze.removeWall(tile, nextDirection);
+
+            lastStep = this.walk(tile, nextDirection);
+
+            if(this.isWall(lastStep)) {
+                lastStep = this.walk(tile, nextDirection);
+            }
+        }
+
+        return lastStep || tile;
+    }
+
+    // TODO: check next wall and tile at once, only move if both are allowed!
     getAllowedDirections(tile) {
         // TODO: move check to getNextTile
         var onlyAdjacentTiles = (direction) => {
@@ -50,11 +83,14 @@ class Maze {
             var tileNumber = this.getNextTile(tile, direction),
                 nextTile = this.tiles[tileNumber];
 
-            return nextTile && !nextTile.visited;
+            return !!nextTile;
         };
+
+        var notEdge = (direction) => !this.isEdge(this.getNextTile(tile, direction));
 
         var allowed = Object.keys(this._DIRECTIONS)
             .filter(onlyAdjacentTiles)
+            .filter(notEdge)
             .filter(notVisited);
 
         // Return null instead of empty array so we can use the method in a while condition
@@ -81,6 +117,13 @@ class Maze {
 
     getRow(tile) {
         return Math.ceil((tile + 1) / this.columns);
+    }
+
+    isEdge(tile) {
+        return this.getColumn(tile) === 1
+            || this.getRow(tile) === 1
+            || this.getColumn(tile) === this.width * 2 + 1
+            || this.getRow(tile) === this.height * 2 + 1
     }
 
     isWall(tile) {

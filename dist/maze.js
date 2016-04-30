@@ -9,15 +9,15 @@ var Maze = function () {
     function Maze(width, height) {
         _classCallCheck(this, Maze);
 
+        this.width = width;
+        this.height = height;
+
         this._DIRECTIONS = {
             left: -1,
             right: 1,
-            up: -width,
-            down: width
+            up: -this.columns,
+            down: this.columns
         };
-
-        this.width = width;
-        this.height = height;
 
         this.tiles = new Array((width * 2 + 1) * (height * 2 + 1)).fill(1);
     }
@@ -48,6 +48,43 @@ var Maze = function () {
             });
         }
     }, {
+        key: 'generatePath',
+        value: function generatePath(start, direction) {
+            // TODO: move to separate file?
+            // TODO: implement variations (depth first, breadth first, stacked, recursive)
+
+            return this.walk(start);
+        }
+    }, {
+        key: 'walk',
+        value: function walk(from, direction) {
+            var allowedDirections,
+                lastStep,
+                tile = direction ? this.getNextTile(from, direction) : from;
+
+            // Mark visited
+            this.tiles[tile] = 0;
+
+            /*jshint boss:true */
+            while (allowedDirections = this.getAllowedDirections(tile)) {
+                var rnd = Math.floor(Math.random() * allowedDirections.length),
+                    nextDirection = allowedDirections[rnd];
+
+                //maze.removeWall(tile, nextDirection);
+
+                lastStep = this.walk(tile, nextDirection);
+
+                if (this.isWall(lastStep)) {
+                    lastStep = this.walk(tile, nextDirection);
+                }
+            }
+
+            return lastStep || tile;
+        }
+
+        // TODO: check next wall and tile at once, only move if both are allowed!
+
+    }, {
         key: 'getAllowedDirections',
         value: function getAllowedDirections(tile) {
             var _this2 = this;
@@ -65,10 +102,14 @@ var Maze = function () {
                 var tileNumber = _this2.getNextTile(tile, direction),
                     nextTile = _this2.tiles[tileNumber];
 
-                return nextTile && !nextTile.visited;
+                return !!nextTile;
             };
 
-            var allowed = Object.keys(this._DIRECTIONS).filter(onlyAdjacentTiles).filter(notVisited);
+            var notEdge = function notEdge(direction) {
+                return !_this2.isEdge(_this2.getNextTile(tile, direction));
+            };
+
+            var allowed = Object.keys(this._DIRECTIONS).filter(onlyAdjacentTiles).filter(notEdge).filter(notVisited);
 
             // Return null instead of empty array so we can use the method in a while condition
             return allowed.length > 0 ? allowed : null;
@@ -100,6 +141,11 @@ var Maze = function () {
         key: 'getRow',
         value: function getRow(tile) {
             return Math.ceil((tile + 1) / this.columns);
+        }
+    }, {
+        key: 'isEdge',
+        value: function isEdge(tile) {
+            return this.getColumn(tile) === 1 || this.getRow(tile) === 1 || this.getColumn(tile) === this.width * 2 + 1 || this.getRow(tile) === this.height * 2 + 1;
         }
     }, {
         key: 'isWall',
@@ -141,9 +187,9 @@ module.exports = Maze;
     // TODO: put in one SETTINGS object
     MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 3,
-        HEIGHT = 3,
-        START_TILE = 0,
+        WIDTH = 2,
+        HEIGHT = 2,
+        START_TILE = 1,
         START_DIRECTION = 'right',
         maze;
 
@@ -154,50 +200,10 @@ module.exports = Maze;
     function start() {
         maze = new Maze(WIDTH, HEIGHT);
 
-        //var end = walk(START_TILE - 1, START_DIRECTION);
-        //console.log(end);
+        var end = maze.generatePath(START_TILE, START_DIRECTION);
+        console.log(end);
 
         maze.draw(MAZE_ELEMENT);
-    }
-
-    function drawMaze() {
-        //.innerHTML = '';
-
-        maze.tiles.forEach(function (tile) {
-            var tileElement = document.createElement('div');
-
-            tile.walls.forEach(function (wall) {
-                tileElement.className += ' ' + wall;
-            });
-
-            tileElement.addEventListener('click', function () {
-                tile.exit = true;
-            });
-
-            MAZE_ELEMENT.appendChild(tileElement);
-        });
-    }
-
-    // TODO: move to separate file, implement variations (depth first, breadth first, stacked, recursive)
-    function walk(from, direction) {
-        var allowedDirections,
-            lastStep,
-            tile = maze.getNextTile(from, direction);
-
-        maze.removeWall(tile, maze.getOppositeDirection(direction));
-        maze.tiles[tile].visited = true;
-
-        /*jshint boss:true */
-        while (allowedDirections = maze.getAllowedDirections(tile)) {
-            var rnd = Math.floor(Math.random() * allowedDirections.length),
-                nextDirection = allowedDirections[rnd];
-
-            maze.removeWall(tile, nextDirection);
-
-            lastStep = walk(tile, nextDirection);
-        }
-
-        return lastStep || tile;
     }
 
     init();
