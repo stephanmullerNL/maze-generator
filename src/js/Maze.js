@@ -26,12 +26,12 @@ class Maze {
         canvas.clearRect(0, 0, element.width, element.height);
 
         this.tiles.forEach((value, tile) => {
-            const col = this.getColumn(tile),
+            const col = this.getColumn(tile), // TODO: figure out new algorithms for 0-indexed
                 row = this.getRow(tile),
-                x = (Math.floor(col / 2) * wallSize) + (Math.floor(col / 2) + col % 2 - 1) * tileSize,
-                y = (Math.floor(row / 2) * wallSize) + (Math.floor(row / 2) + row % 2 - 1) * tileSize,
-                width  = (col % 2) ? wallSize : tileSize,
-                height = (row % 2) ? wallSize : tileSize;
+                x = (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * tileSize,
+                y = (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * tileSize,
+                width  = (col % 2) ? tileSize : wallSize,
+                height = (row % 2) ? tileSize : wallSize;
 
             canvas.fillStyle = ['white', 'black'][value];
             canvas.fillRect(x, y, width, height);
@@ -63,6 +63,8 @@ class Maze {
         this.setTile(wall, 0);
         this.setTile(room, 0);
 
+        this._log();
+
         /*jshint boss:true */
         while(allowedDirections = this.getAllowedDirections(room)) {
             // TODO: Add option for horizontal/vertical bias
@@ -88,9 +90,8 @@ class Maze {
         return (allowed.length > 0) ? allowed : null;
     }
 
-    // NOTE: Columns and rows are 1-indexed. Might have to change this?
     getColumn(tile) {
-        return Math.floor(tile % this.columns) + 1;
+        return Math.floor(tile % this.columns);
     }
 
     getNextTile(tile, direction) {
@@ -99,9 +100,8 @@ class Maze {
         return this.isAdjacent(tile, next) ? next : null;
     }
 
-    // NOTE: Columns and rows are 1-indexed. Might have to change this?
     getRow(tile) {
-        return Math.ceil((tile + 1) / this.columns);
+        return Math.floor((tile) / this.columns);
     }
 
     getTile(tile) {
@@ -113,14 +113,14 @@ class Maze {
     }
 
     isEdge(tile) {
-        return this.getColumn(tile) === 1 ||
-               this.getRow(tile) === 1 ||
-               this.getColumn(tile) === this.columns ||
-               this.getRow(tile) === this.rows;
+        return this.getColumn(tile) === 0 ||
+               this.getRow(tile) === 0 ||
+               this.getColumn(tile) === this.columns - 1 ||
+               this.getRow(tile) === this.rows - 1;
     }
 
     isWall(tile) {
-        return this.getRow(tile) % 2 === 1 || this.getColumn(tile) % 2 === 1;
+        return this.getRow(tile) % 2 === 0 || this.getColumn(tile) % 2 === 0;
     }
 
     setTile(tile, value) {

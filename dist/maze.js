@@ -40,11 +40,12 @@ var Maze = function () {
 
             this.tiles.forEach(function (value, tile) {
                 var col = _this.getColumn(tile),
-                    row = _this.getRow(tile),
-                    x = Math.floor(col / 2) * wallSize + (Math.floor(col / 2) + col % 2 - 1) * tileSize,
-                    y = Math.floor(row / 2) * wallSize + (Math.floor(row / 2) + row % 2 - 1) * tileSize,
-                    width = col % 2 ? wallSize : tileSize,
-                    height = row % 2 ? wallSize : tileSize;
+                    // TODO: figure out new algorithms for 0-indexed
+                row = _this.getRow(tile),
+                    x = Math.ceil(col / 2) * wallSize + (Math.ceil(col / 2) - col % 2) * tileSize,
+                    y = Math.ceil(row / 2) * wallSize + (Math.ceil(row / 2) - row % 2) * tileSize,
+                    width = col % 2 ? tileSize : wallSize,
+                    height = row % 2 ? tileSize : wallSize;
 
                 canvas.fillStyle = ['white', 'black'][value];
                 canvas.fillRect(x, y, width, height);
@@ -77,6 +78,8 @@ var Maze = function () {
             this.setTile(wall, 0);
             this.setTile(room, 0);
 
+            this._log();
+
             /*jshint boss:true */
             while (allowedDirections = this.getAllowedDirections(room)) {
                 // TODO: Add option for horizontal/vertical bias
@@ -104,13 +107,10 @@ var Maze = function () {
             // Return null instead of empty array so we can use the method in a while condition
             return allowed.length > 0 ? allowed : null;
         }
-
-        // NOTE: Columns and rows are 1-indexed. Might have to change this?
-
     }, {
         key: 'getColumn',
         value: function getColumn(tile) {
-            return Math.floor(tile % this.columns) + 1;
+            return Math.floor(tile % this.columns);
         }
     }, {
         key: 'getNextTile',
@@ -119,13 +119,10 @@ var Maze = function () {
 
             return this.isAdjacent(tile, next) ? next : null;
         }
-
-        // NOTE: Columns and rows are 1-indexed. Might have to change this?
-
     }, {
         key: 'getRow',
         value: function getRow(tile) {
-            return Math.ceil((tile + 1) / this.columns);
+            return Math.floor(tile / this.columns);
         }
     }, {
         key: 'getTile',
@@ -140,12 +137,12 @@ var Maze = function () {
     }, {
         key: 'isEdge',
         value: function isEdge(tile) {
-            return this.getColumn(tile) === 1 || this.getRow(tile) === 1 || this.getColumn(tile) === this.columns || this.getRow(tile) === this.rows;
+            return this.getColumn(tile) === 0 || this.getRow(tile) === 0 || this.getColumn(tile) === this.columns - 1 || this.getRow(tile) === this.rows - 1;
         }
     }, {
         key: 'isWall',
         value: function isWall(tile) {
-            return this.getRow(tile) % 2 === 1 || this.getColumn(tile) % 2 === 1;
+            return this.getRow(tile) % 2 === 0 || this.getColumn(tile) % 2 === 0;
         }
     }, {
         key: 'setTile',
@@ -201,8 +198,8 @@ module.exports = Maze;
     // TODO: put in one SETTINGS object
     MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 100,
-        HEIGHT = 100,
+        WIDTH = 2,
+        HEIGHT = 2,
 
 
     // TODO: make start tile customizable

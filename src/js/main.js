@@ -9,8 +9,8 @@
     // TODO: put in one SETTINGS object
         MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 100,
-        HEIGHT = 100,
+        WIDTH = 2,
+        HEIGHT = 2,
 
     // TODO: make start tile customizable
         START = 1,
