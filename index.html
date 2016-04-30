@@ -1,42 +1,30 @@
 <html>
     <head>
         <style>
+            html {
+                font-size: 10px;
+            }
+
             #maze {
                 background: silver;
-                font-size: 15px;
+                display: block;
+                /*height: 75rem;*/
+                margin: 0 auto;
                 overflow: auto;
-            }
-
-            #maze div {
-                border: 1px solid transparent;
-                box-sizing: border-box;
-                float: left;
-                height: 1em;
-                width: 1em;
-            }
-
-            #maze .left {
-                border-left-color: black;
-            }
-
-            #maze .right {
-                border-right-color: black;
-            }
-
-            #maze .up {
-                border-top-color: black;
-            }
-
-            #maze .down {
-                border-bottom-color: black;
+                /*width: 75rem;*/
             }
 
         </style>
     </head>
     <body>
-        <div id="maze"></div>
+        <h1>Maze Generator</h1>
 
-        <button id="start">Start!</button>
+        <section>
+            <h2>Generate maze</h2>
+            <button id="start">Start!</button>
+        </section>
+
+        <canvas id="maze" width="750" height="750"></canvas>
 
         <script src="dist/maze.js"></script>
     </body>

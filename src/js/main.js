@@ -9,8 +9,8 @@
         // TODO: put in one SETTINGS object
         MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 50,
-        HEIGHT = 50,
+        WIDTH = 3,
+        HEIGHT = 3,
 
         START_TILE = 0,
         START_DIRECTION = 'right',
@@ -19,24 +19,19 @@
 
     function init() {
         START_BUTTON.addEventListener('click', start);
-
-        MAZE_ELEMENT.style.width = WIDTH + 'em';
-        MAZE_ELEMENT.style.height = HEIGHT + 'em';
     }
 
     function start() {
         maze = new Maze(WIDTH, HEIGHT);
 
-        var end = walk(START_TILE - 1, START_DIRECTION);
-        console.log(end);
+        //var end = walk(START_TILE - 1, START_DIRECTION);
+        //console.log(end);
 
-        drawMaze();
+        maze.draw(MAZE_ELEMENT);
     }
 
-
-    // TODO: canvas?
     function drawMaze() {
-        MAZE_ELEMENT.innerHTML = '';
+        //.innerHTML = '';
 
         maze.tiles.forEach((tile) => {
             var tileElement = document.createElement('div');

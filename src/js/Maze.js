@@ -1,12 +1,6 @@
 class Maze {
 
     constructor(width, height) {
-        // TODO: don't use objects but simply 1 for wall and 0 for path
-        const DEFAULT_TILE = {
-            visited: false,
-            walls: ['left', 'right', 'up', 'down']
-        };
-
         this._DIRECTIONS = {
             left: -1,
             right: 1,
@@ -16,11 +10,30 @@ class Maze {
 
         this.width = width;
         this.height = height;
-        this.tiles = [];
 
-        for (let i = 0; i < width * height; i++) {
-            this.tiles[i] = JSON.parse(JSON.stringify(DEFAULT_TILE));
+        this.tiles = new Array((width * 2 + 1) * (height * 2 + 1)).fill(1);
+    }
+
+    draw(element) {
+        if(element.tagName !== 'CANVAS') {
+            throw new Error('Please supply a canvas element to draw on');
         }
+
+        const canvas = element.getContext('2d'),
+            wallSize = 5,
+            tileSize = (element.width - ((this.width + 1) * wallSize)) / this.width;
+
+        this.tiles.forEach((value, tile) => {
+            const col = this.getColumn(tile),
+                row = this.getRow(tile),
+                x = (Math.floor(col / 2) * wallSize) + (Math.floor(col / 2) + col % 2 - 1) * tileSize,
+                y = (Math.floor(row / 2) * wallSize) + (Math.floor(row / 2) + row % 2 - 1) * tileSize,
+                width = (col % 2) ? wallSize : tileSize,
+                height = (row % 2) ? wallSize : tileSize;
+
+            canvas.fillStyle = ['white', 'black'][value];
+            canvas.fillRect(x, y, width, height);
+        })
     }
 
     getAllowedDirections(tile) {
@@ -49,7 +62,7 @@ class Maze {
     }
 
     getColumn(tile) {
-        return Math.floor((tile + 1) % this.width);
+        return Math.floor(tile % this.columns) + 1;
     }
 
     getNextTile(tile, direction) {
@@ -67,15 +80,22 @@ class Maze {
     }
 
     getRow(tile) {
-        return Math.ceil((tile + 1) / this.width);
+        return Math.ceil((tile + 1) / this.columns);
     }
 
+    isWall(tile) {
+        return this.getRow(tile) % 2 === 0 || this.getColumn(tile) % 2 === 0;
+    }
 
     removeWall(tile, direction) {
         var walls = this.tiles[tile].walls,
             index = walls.indexOf(direction);
 
         return walls.splice(index, 1);
+    }
+
+    get columns() {
+        return this.width * 2 + 1;
     }
 }
 

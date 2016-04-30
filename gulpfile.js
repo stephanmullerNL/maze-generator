@@ -72,8 +72,12 @@ gulp.task('build', function() {
     return compile();
 });
 
-gulp.task('watch', function() {
+gulp.task('scripts', function () {
     return compile(true);
+});
+
+gulp.task('watch', function() {
+    gulp.watch(config.scripts.all, ['hint', 'scripts']);
 });
 
 //gulp.task('default', ['watch']);

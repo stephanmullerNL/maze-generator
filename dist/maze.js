@@ -9,12 +9,6 @@ var Maze = function () {
     function Maze(width, height) {
         _classCallCheck(this, Maze);
 
-        // TODO: don't use objects but simply 1 for wall and 0 for path
-        var DEFAULT_TILE = {
-            visited: false,
-            walls: ['left', 'right', 'up', 'down']
-        };
-
         this._DIRECTIONS = {
             left: -1,
             right: 1,
@@ -24,30 +18,52 @@ var Maze = function () {
 
         this.width = width;
         this.height = height;
-        this.tiles = [];
 
-        for (var i = 0; i < width * height; i++) {
-            this.tiles[i] = JSON.parse(JSON.stringify(DEFAULT_TILE));
-        }
+        this.tiles = new Array((width * 2 + 1) * (height * 2 + 1)).fill(1);
     }
 
     _createClass(Maze, [{
+        key: 'draw',
+        value: function draw(element) {
+            var _this = this;
+
+            if (element.tagName !== 'CANVAS') {
+                throw new Error('Please supply a canvas element to draw on');
+            }
+
+            var canvas = element.getContext('2d'),
+                wallSize = 5,
+                tileSize = (element.width - (this.width + 1) * wallSize) / this.width;
+
+            this.tiles.forEach(function (value, tile) {
+                var col = _this.getColumn(tile),
+                    row = _this.getRow(tile),
+                    x = Math.floor(col / 2) * wallSize + (Math.floor(col / 2) + col % 2 - 1) * tileSize,
+                    y = Math.floor(row / 2) * wallSize + (Math.floor(row / 2) + row % 2 - 1) * tileSize,
+                    width = col % 2 ? wallSize : tileSize,
+                    height = row % 2 ? wallSize : tileSize;
+
+                canvas.fillStyle = ['white', 'black'][value];
+                canvas.fillRect(x, y, width, height);
+            });
+        }
+    }, {
         key: 'getAllowedDirections',
         value: function getAllowedDirections(tile) {
-            var _this = this;
+            var _this2 = this;
 
             // TODO: move check to getNextTile
             var onlyAdjacentTiles = function onlyAdjacentTiles(direction) {
-                var tileNumber = _this.getNextTile(tile, direction),
-                    sameRow = _this.getRow(tileNumber) === _this.getRow(tile),
-                    sameCol = _this.getColumn(tileNumber) === _this.getColumn(tile);
+                var tileNumber = _this2.getNextTile(tile, direction),
+                    sameRow = _this2.getRow(tileNumber) === _this2.getRow(tile),
+                    sameCol = _this2.getColumn(tileNumber) === _this2.getColumn(tile);
 
                 return sameRow || sameCol;
             };
 
             var notVisited = function notVisited(direction) {
-                var tileNumber = _this.getNextTile(tile, direction),
-                    nextTile = _this.tiles[tileNumber];
+                var tileNumber = _this2.getNextTile(tile, direction),
+                    nextTile = _this2.tiles[tileNumber];
 
                 return nextTile && !nextTile.visited;
             };
@@ -60,7 +76,7 @@ var Maze = function () {
     }, {
         key: 'getColumn',
         value: function getColumn(tile) {
-            return Math.floor((tile + 1) % this.width);
+            return Math.floor(tile % this.columns) + 1;
         }
     }, {
         key: 'getNextTile',
@@ -83,7 +99,12 @@ var Maze = function () {
     }, {
         key: 'getRow',
         value: function getRow(tile) {
-            return Math.ceil((tile + 1) / this.width);
+            return Math.ceil((tile + 1) / this.columns);
+        }
+    }, {
+        key: 'isWall',
+        value: function isWall(tile) {
+            return this.getRow(tile) % 2 === 0 || this.getColumn(tile) % 2 === 0;
         }
     }, {
         key: 'removeWall',
@@ -92,6 +113,11 @@ var Maze = function () {
                 index = walls.indexOf(direction);
 
             return walls.splice(index, 1);
+        }
+    }, {
+        key: 'columns',
+        get: function get() {
+            return this.width * 2 + 1;
         }
     }]);
 
@@ -115,31 +141,27 @@ module.exports = Maze;
     // TODO: put in one SETTINGS object
     MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 50,
-        HEIGHT = 50,
+        WIDTH = 3,
+        HEIGHT = 3,
         START_TILE = 0,
         START_DIRECTION = 'right',
         maze;
 
     function init() {
         START_BUTTON.addEventListener('click', start);
-
-        MAZE_ELEMENT.style.width = WIDTH + 'em';
-        MAZE_ELEMENT.style.height = HEIGHT + 'em';
     }
 
     function start() {
         maze = new Maze(WIDTH, HEIGHT);
 
-        var end = walk(START_TILE - 1, START_DIRECTION);
-        console.log(end);
+        //var end = walk(START_TILE - 1, START_DIRECTION);
+        //console.log(end);
 
-        drawMaze();
+        maze.draw(MAZE_ELEMENT);
     }
 
-    // TODO: canvas?
     function drawMaze() {
-        MAZE_ELEMENT.innerHTML = '';
+        //.innerHTML = '';
 
         maze.tiles.forEach(function (tile) {
             var tileElement = document.createElement('div');
