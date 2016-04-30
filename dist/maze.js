@@ -32,8 +32,9 @@ var Maze = function () {
             }
 
             var canvas = element.getContext('2d'),
-                wallSize = 5,
-                tileSize = (element.width - (this.width + 1) * wallSize) / this.width;
+                wallSize = 1,
+                // TODO: calculate or make customisable
+            tileSize = (element.width - (this.width + 1) * wallSize) / this.width;
 
             canvas.clearRect(0, 0, element.width, element.height);
 
@@ -56,7 +57,11 @@ var Maze = function () {
             // TODO: implement variations (depth first, breadth first, stacked, recursive)
             var direction = this.getAllowedDirections(start)[0];
 
-            this.walk(start, direction);
+            try {
+                this.walk(start, direction);
+            } catch (e) {
+                alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
+            }
 
             this.setTile(end, 0);
         }
@@ -195,8 +200,8 @@ module.exports = Maze;
     // TODO: put in one SETTINGS object
     MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 20,
-        HEIGHT = 20,
+        WIDTH = 100,
+        HEIGHT = 100,
 
 
     // TODO: make start tile customizable

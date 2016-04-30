@@ -20,7 +20,7 @@ class Maze {
         }
 
         const canvas = element.getContext('2d'),
-            wallSize = 5,
+            wallSize = 1, // TODO: calculate or make customisable
             tileSize = (element.width - ((this.width + 1) * wallSize)) / this.width;
 
         canvas.clearRect(0, 0, element.width, element.height);
@@ -43,7 +43,12 @@ class Maze {
         // TODO: implement variations (depth first, breadth first, stacked, recursive)
         let direction = this.getAllowedDirections(start)[0];
 
-        this.walk(start, direction);
+        try {
+            this.walk(start, direction);
+        } catch (e) {
+            alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
+        }
+
 
         this.setTile(end, 0);
     }
@@ -75,7 +80,7 @@ class Maze {
             let nextWall = this.isWall(tile) ? tile : this.getNextTile(tile, direction),
                 nextRoom = this.getNextTile(nextWall, direction);
 
-            return !this.isWall(nextRoom)  &&!!this.getTile(nextRoom);
+            return !this.isWall(nextRoom) && !!this.getTile(nextRoom);
         });
 
         // Return null instead of empty array so we can use the method in a while condition
