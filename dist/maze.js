@@ -51,71 +51,56 @@ var Maze = function () {
         }
     }, {
         key: 'generatePath',
-        value: function generatePath(start, direction) {
+        value: function generatePath(start, end) {
             // TODO: move to separate file?
             // TODO: implement variations (depth first, breadth first, stacked, recursive)
+            var direction = this.getAllowedDirections(start)[0];
 
-            return this.walk(start);
+            this.walk(start, direction);
+
+            this.setTile(end, 0);
         }
     }, {
         key: 'walk',
         value: function walk(from, direction) {
-            var allowedDirections,
-                lastStep,
-                tile = direction ? this.getNextTile(from, direction) : from;
+            var allowedDirections = void 0,
+                lastStep = void 0,
+                wall = this.isWall(from) ? from : this.getNextTile(from, direction),
+                room = this.getNextTile(wall, direction);
 
-            // Mark visited
-            this.tiles[tile] = 0;
+            // Mark as visited
+            this.setTile(wall, 0);
+            this.setTile(room, 0);
 
             /*jshint boss:true */
-            while (allowedDirections = this.getAllowedDirections(tile)) {
+            while (allowedDirections = this.getAllowedDirections(room)) {
                 var rnd = Math.floor(Math.random() * allowedDirections.length),
                     nextDirection = allowedDirections[rnd];
 
-                //maze.removeWall(tile, nextDirection);
-
-                lastStep = this.walk(tile, nextDirection);
-
-                if (this.isWall(lastStep)) {
-                    lastStep = this.walk(tile, nextDirection);
-                }
+                lastStep = this.walk(room, nextDirection);
             }
 
-            return lastStep || tile;
+            return lastStep || room;
         }
-
-        // TODO: check next wall and tile at once, only move if both are allowed!
-
     }, {
         key: 'getAllowedDirections',
         value: function getAllowedDirections(tile) {
             var _this2 = this;
 
-            // TODO: move check to getNextTile
-            var onlyAdjacentTiles = function onlyAdjacentTiles(direction) {
-                var tileNumber = _this2.getNextTile(tile, direction),
-                    sameRow = _this2.getRow(tileNumber) === _this2.getRow(tile),
-                    sameCol = _this2.getColumn(tileNumber) === _this2.getColumn(tile);
+            var allowed = Object.keys(this._DIRECTIONS).filter(function (direction) {
 
-                return sameRow || sameCol;
-            };
+                var nextWall = _this2.isWall(tile) ? tile : _this2.getNextTile(tile, direction),
+                    nextRoom = _this2.getNextTile(nextWall, direction);
 
-            var notVisited = function notVisited(direction) {
-                var tileNumber = _this2.getNextTile(tile, direction),
-                    nextTile = _this2.tiles[tileNumber];
-
-                return !!nextTile;
-            };
-
-            var notEdge = function notEdge(direction) {
-                return !_this2.isEdge(_this2.getNextTile(tile, direction));
-            };
-
-            var allowed = Object.keys(this._DIRECTIONS).filter(onlyAdjacentTiles).filter(notEdge).filter(notVisited);
+                return !_this2.isWall(nextRoom) && !!_this2.getTile(nextRoom);
+            });
 
             // Return null instead of empty array so we can use the method in a while condition
             return allowed.length > 0 ? allowed : null;
         }
+
+        // NOTE: Columns and rows are 1-indexed. Might have to change this?
+
     }, {
         key: 'getColumn',
         value: function getColumn(tile) {
@@ -124,48 +109,69 @@ var Maze = function () {
     }, {
         key: 'getNextTile',
         value: function getNextTile(tile, direction) {
-            return tile + this._DIRECTIONS[direction];
+            var next = tile + this._DIRECTIONS[direction];
+
+            return this.isAdjacent(tile, next) ? next : null;
         }
 
-        // Takes any direction and returns the opposite by performing magic on the array
-        // index. 0 <-> 1, 2 <-> 3, etc.
+        // NOTE: Columns and rows are 1-indexed. Might have to change this?
 
-    }, {
-        key: 'getOppositeDirection',
-        value: function getOppositeDirection(direction) {
-            var directions = Object.keys(this._DIRECTIONS),
-                index = directions.indexOf(direction),
-                opposite = index % 2 ? -1 : 1;
-
-            return directions[index + opposite];
-        }
     }, {
         key: 'getRow',
         value: function getRow(tile) {
             return Math.ceil((tile + 1) / this.columns);
         }
     }, {
+        key: 'getTile',
+        value: function getTile(tile) {
+            return this.tiles[tile];
+        }
+    }, {
+        key: 'isAdjacent',
+        value: function isAdjacent(tile, next) {
+            return this.getRow(tile) === this.getRow(next) || this.getColumn(tile) === this.getColumn(next);
+        }
+    }, {
         key: 'isEdge',
         value: function isEdge(tile) {
-            return this.getColumn(tile) === 1 || this.getRow(tile) === 1 || this.getColumn(tile) === this.width * 2 + 1 || this.getRow(tile) === this.height * 2 + 1;
+            return this.getColumn(tile) === 1 || this.getRow(tile) === 1 || this.getColumn(tile) === this.columns || this.getRow(tile) === this.rows;
         }
     }, {
         key: 'isWall',
         value: function isWall(tile) {
-            return this.getRow(tile) % 2 === 0 || this.getColumn(tile) % 2 === 0;
+            return this.getRow(tile) % 2 === 1 || this.getColumn(tile) % 2 === 1;
         }
     }, {
-        key: 'removeWall',
-        value: function removeWall(tile, direction) {
-            var walls = this.tiles[tile].walls,
-                index = walls.indexOf(direction);
+        key: 'setTile',
+        value: function setTile(tile, value) {
+            this.tiles[tile] = value;
+        }
+    }, {
+        key: '_log',
+        value: function _log() {
+            var _this3 = this;
 
-            return walls.splice(index, 1);
+            var output = '';
+
+            this.tiles.forEach(function (tile, i) {
+                output += tile;
+
+                if ((i + 1) % _this3.columns === 0) {
+                    output += '\n';
+                }
+            });
+
+            console.log(output);
         }
     }, {
         key: 'columns',
         get: function get() {
             return this.width * 2 + 1;
+        }
+    }, {
+        key: 'rows',
+        get: function get() {
+            return this.height * 2 + 1;
         }
     }]);
 
@@ -191,19 +197,22 @@ module.exports = Maze;
         START_BUTTON = document.getElementById('start'),
         WIDTH = 20,
         HEIGHT = 20,
-        START_TILE = 1,
-        START_DIRECTION = 'right',
-        maze;
+
+
+    // TODO: make start tile customizable
+    START = 1,
+
+    // TODO: let user pick end point after generating
+    END = (WIDTH * 2 + 1) * (HEIGHT * 2 + 1) - 2;
 
     function init() {
         START_BUTTON.addEventListener('click', start);
     }
 
     function start() {
-        maze = new Maze(WIDTH, HEIGHT);
+        var maze = new Maze(WIDTH, HEIGHT);
 
-        var end = maze.generatePath(START_TILE, START_DIRECTION);
-        console.log(end);
+        maze.generatePath(START, END);
 
         maze.draw(MAZE_ELEMENT);
     }

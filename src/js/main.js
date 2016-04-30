@@ -6,26 +6,25 @@
 
     var Maze = require('./Maze.js'),
 
-        // TODO: put in one SETTINGS object
+    // TODO: put in one SETTINGS object
         MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
         WIDTH = 20,
         HEIGHT = 20,
 
-        START_TILE = 1,
-        START_DIRECTION = 'right',
-
-        maze;
+    // TODO: make start tile customizable
+        START = 1,
+    // TODO: let user pick end point after generating
+        END = (WIDTH * 2 + 1) * (HEIGHT * 2 + 1) - 2;
 
     function init() {
         START_BUTTON.addEventListener('click', start);
     }
 
     function start() {
-        maze = new Maze(WIDTH, HEIGHT);
+        let maze = new Maze(WIDTH, HEIGHT);
 
-        let end = maze.generatePath(START_TILE, START_DIRECTION);
-        console.log(end);
+        maze.generatePath(START, END);
 
         maze.draw(MAZE_ELEMENT);
     }
