@@ -15,7 +15,7 @@ module.exports = class {
         this.rows = height * 2 + 1;
 
         this.wallSize = Math.ceil(40 / width);
-        this.roomSize = (element.width - ((width + 1) * this.wallSize)) / width;
+        this.roomSize = Math.floor((element.width - ((width + 1) * this.wallSize)) / width);
 
         this._DIRECTIONS = {
             left: -1,
