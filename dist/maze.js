@@ -5,6 +5,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+// TODO: implement weakmaps
 var PATH = 0,
     WALL = 1,
     VISITED = 2;
@@ -15,13 +16,14 @@ module.exports = function () {
 
         var tiles = (width * 2 + 1) * (height * 2 + 1);
 
+        // TODO: move to private vars but with getters/setters
         this.width = width;
         this.height = height;
         this.columns = width * 2 + 1;
         this.rows = height * 2 + 1;
 
         this.wallSize = Math.ceil(40 / width);
-        this.roomSize = (element.width - (width + 1) * this.wallSize) / width;
+        this.roomSize = Math.floor((element.width - (width + 1) * this.wallSize) / width);
 
         this._DIRECTIONS = {
             left: -1,
@@ -174,32 +176,36 @@ module.exports = function () {
         value: function solve(start, end) {
             var _this3 = this;
 
-            var markVisited = function markVisited(tile) {
-                _this3.setTile(tile, VISITED);
-                _this3.drawTile(tile, 'red');
-            };
-
             var current = void 0,
                 queue = [start];
 
+            // TODO: find a better fix for private/inner functions
+            var markVisited = function markVisited(tile) {
+                _this3.setTile(tile, VISITED);
+                _this3.drawTile(tile, 'red');
+            },
+                solveNextTile = function solveNextTile(direction) {
+                var tile = _this3.getNextTile(current, direction);
+
+                markVisited(tile);
+
+                if (tile === end) {
+                    queue = [];
+                } else {
+                    queue.push(tile);
+                }
+            };
+
             markVisited(start);
 
+            /*jshint boss:true */
             while (current = queue.shift()) {
                 var directions = void 0;
 
+                /*jshint boss:true */
                 while (directions = this.getAllowedDirections(current, PATH)) {
 
-                    directions.forEach(function (direction) {
-                        var tile = _this3.getNextTile(current, direction);
-
-                        markVisited(tile);
-
-                        if (tile === end) {
-                            queue = [];
-                        } else {
-                            queue.push(tile);
-                        }
-                    });
+                    directions.forEach(solveNextTile);
                 }
             }
         }

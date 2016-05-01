@@ -1,3 +1,4 @@
+// TODO: implement weakmaps
 const PATH = 0,
       WALL = 1,
       VISITED = 2;
@@ -7,6 +8,7 @@ module.exports = class {
     constructor(element, width, height) {
         const tiles = (width * 2 + 1) * (height * 2 + 1);
 
+        // TODO: move to private vars but with getters/setters
         this.width = width;
         this.height = height;
         this.columns = width * 2 + 1;
@@ -143,32 +145,36 @@ module.exports = class {
     }
 
     solve(start, end) {
-        const markVisited = tile => {
-            this.setTile(tile, VISITED);
-            this.drawTile(tile, 'red');
-        };
-
         let current,
             queue = [start];
 
+        // TODO: find a better fix for private/inner functions
+        const markVisited = (tile) => {
+                this.setTile(tile, VISITED);
+                this.drawTile(tile, 'red');
+            },
+            solveNextTile = (direction) => {
+                let tile = this.getNextTile(current, direction);
+
+                markVisited(tile);
+
+                if(tile === end) {
+                    queue = [];
+                } else {
+                    queue.push(tile);
+                }
+            };
+
         markVisited(start);
 
+        /*jshint boss:true */
         while(current = queue.shift()) {
             let directions;
 
+            /*jshint boss:true */
             while(directions = this.getAllowedDirections(current, PATH)) {
 
-                directions.forEach((direction) => {
-                    let tile = this.getNextTile(current, direction);
-
-                    markVisited(tile);
-
-                    if(tile === end) {
-                        queue = [];
-                    } else {
-                        queue.push(tile);
-                    }
-                });
+                directions.forEach(solveNextTile);
             }
         }
     }
@@ -187,4 +193,4 @@ module.exports = class {
 
         console.log(output);
     }
-}
+};
