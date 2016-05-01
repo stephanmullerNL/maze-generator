@@ -47,9 +47,9 @@ module.exports = class {
         const drawTileLoop = (tile) => {
             if(tile) {
                 this.drawTile(tile, 'red');
-                tile = path.pop();
+                tile = path.shift();
                 this.drawTile(tile, 'red');
-                tile = path.pop();
+                tile = path.shift();
 
                 setTimeout(() => {
                     drawTileLoop(tile);
@@ -62,7 +62,7 @@ module.exports = class {
             path.push(tile);
         } while (tile = steps[tile]);
 
-        drawTileLoop(path.pop());
+        drawTileLoop(path.shift());
     }
 
     drawTile(tile, color) {

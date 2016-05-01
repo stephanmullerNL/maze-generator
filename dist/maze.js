@@ -62,9 +62,9 @@ module.exports = function () {
             var drawTileLoop = function drawTileLoop(tile) {
                 if (tile) {
                     _this2.drawTile(tile, 'red');
-                    tile = path.pop();
+                    tile = path.shift();
                     _this2.drawTile(tile, 'red');
-                    tile = path.pop();
+                    tile = path.shift();
 
                     setTimeout(function () {
                         drawTileLoop(tile);
@@ -77,7 +77,7 @@ module.exports = function () {
                 path.push(tile);
             } while (tile = steps[tile]);
 
-            drawTileLoop(path.pop());
+            drawTileLoop(path.shift());
         }
     }, {
         key: 'drawTile',
