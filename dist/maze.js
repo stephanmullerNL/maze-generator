@@ -5,12 +5,23 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Maze = function () {
-    function Maze(width, height) {
-        _classCallCheck(this, Maze);
+var PATH = 0,
+    WALL = 1,
+    VISITED = 2;
+
+module.exports = function () {
+    function _class(element, width, height) {
+        _classCallCheck(this, _class);
+
+        var tiles = (width * 2 + 1) * (height * 2 + 1);
 
         this.width = width;
         this.height = height;
+        this.columns = width * 2 + 1;
+        this.rows = height * 2 + 1;
+
+        this.wallSize = Math.ceil(40 / width);
+        this.roomSize = (element.width - (width + 1) * this.wallSize) / width;
 
         this._DIRECTIONS = {
             left: -1,
@@ -19,44 +30,43 @@ var Maze = function () {
             down: this.columns
         };
 
-        this.tiles = new Array((width * 2 + 1) * (height * 2 + 1)).fill(1);
+        this._element = element;
+        this._canvas = element.getContext('2d');
+
+        this.tiles = new Array(tiles).fill(WALL);
     }
 
-    _createClass(Maze, [{
-        key: 'draw',
-        value: function draw(element) {
+    _createClass(_class, [{
+        key: 'drawMaze',
+        value: function drawMaze() {
             var _this = this;
 
-            if (element.tagName !== 'CANVAS') {
-                throw new Error('Please supply a canvas element to draw on');
-            }
+            this._canvas.clearRect(0, 0, this._element.width, this._element.height);
 
-            var canvas = element.getContext('2d'),
-                wallSize = 1,
-                // TODO: calculate or make customisable
-            tileSize = (element.width - (this.width + 1) * wallSize) / this.width;
-
-            canvas.clearRect(0, 0, element.width, element.height);
-
-            this.tiles.forEach(function (value, tile) {
-                var col = _this.getColumn(tile),
-                    // TODO: figure out new algorithms for 0-indexed
-                row = _this.getRow(tile),
-                    x = Math.ceil(col / 2) * wallSize + (Math.ceil(col / 2) - col % 2) * tileSize,
-                    y = Math.ceil(row / 2) * wallSize + (Math.ceil(row / 2) - row % 2) * tileSize,
-                    width = col % 2 ? tileSize : wallSize,
-                    height = row % 2 ? tileSize : wallSize;
-
-                canvas.fillStyle = ['white', 'black'][value];
-                canvas.fillRect(x, y, width, height);
+            this.tiles.forEach(function (type, tile) {
+                var color = ['white', 'black'][type];
+                _this.drawTile(tile, color);
             });
+        }
+    }, {
+        key: 'drawTile',
+        value: function drawTile(tile, color) {
+            var col = this.getColumn(tile),
+                row = this.getRow(tile),
+                x = Math.ceil(col / 2) * this.wallSize + (Math.ceil(col / 2) - col % 2) * this.roomSize,
+                y = Math.ceil(row / 2) * this.wallSize + (Math.ceil(row / 2) - row % 2) * this.roomSize,
+                width = col % 2 ? this.roomSize : this.wallSize,
+                height = row % 2 ? this.roomSize : this.wallSize;
+
+            this._canvas.fillStyle = color;
+            this._canvas.fillRect(x, y, width, height);
         }
     }, {
         key: 'generatePath',
         value: function generatePath(start, end) {
             // TODO: move to separate file?
             // TODO: implement variations (depth first, breadth first, stacked, recursive)
-            var direction = this.getAllowedDirections(start)[0];
+            var direction = this.getAllowedDirections(start, WALL)[0];
 
             try {
                 this.walk(start, direction);
@@ -74,14 +84,11 @@ var Maze = function () {
                 wall = this.isWall(from) ? from : this.getNextTile(from, direction),
                 room = this.getNextTile(wall, direction);
 
-            // Mark as visited
-            this.setTile(wall, 0);
-            this.setTile(room, 0);
-
-            this._log();
+            this.setTile(wall, PATH);
+            this.setTile(room, PATH);
 
             /*jshint boss:true */
-            while (allowedDirections = this.getAllowedDirections(room)) {
+            while (allowedDirections = this.getAllowedDirections(room, WALL, 2)) {
                 // TODO: Add option for horizontal/vertical bias
                 var rnd = Math.floor(Math.random() * allowedDirections.length),
                     nextDirection = allowedDirections[rnd];
@@ -93,15 +100,28 @@ var Maze = function () {
         }
     }, {
         key: 'getAllowedDirections',
-        value: function getAllowedDirections(tile) {
+        value: function getAllowedDirections(tile, allowedType) {
             var _this2 = this;
+
+            var step = arguments.length <= 2 || arguments[2] === undefined ? 1 : arguments[2];
 
             var allowed = Object.keys(this._DIRECTIONS).filter(function (direction) {
 
-                var nextWall = _this2.isWall(tile) ? tile : _this2.getNextTile(tile, direction),
-                    nextRoom = _this2.getNextTile(nextWall, direction);
+                var nextRoom = tile;
 
-                return !_this2.isWall(nextRoom) && !!_this2.getTile(nextRoom);
+                for (var i = 0; i < step; i++) {
+                    nextRoom = _this2.getNextTile(nextRoom, direction);
+
+                    var type = _this2.getTileType(nextRoom),
+                        isAllowed = type === allowedType,
+                        isIntersection = _this2.isIntersection(nextRoom);
+
+                    if (!isAllowed || isIntersection) {
+                        return false;
+                    }
+                }
+
+                return true;
             });
 
             // Return null instead of empty array so we can use the method in a while condition
@@ -125,8 +145,8 @@ var Maze = function () {
             return Math.floor(tile / this.columns);
         }
     }, {
-        key: 'getTile',
-        value: function getTile(tile) {
+        key: 'getTileType',
+        value: function getTileType(tile) {
             return this.tiles[tile];
         }
     }, {
@@ -135,9 +155,9 @@ var Maze = function () {
             return this.getRow(tile) === this.getRow(next) || this.getColumn(tile) === this.getColumn(next);
         }
     }, {
-        key: 'isEdge',
-        value: function isEdge(tile) {
-            return this.getColumn(tile) === 0 || this.getRow(tile) === 0 || this.getColumn(tile) === this.columns - 1 || this.getRow(tile) === this.rows - 1;
+        key: 'isIntersection',
+        value: function isIntersection(tile) {
+            return this.getRow(tile) % 2 === 0 && this.getColumn(tile) % 2 === 0;
         }
     }, {
         key: 'isWall',
@@ -146,42 +166,64 @@ var Maze = function () {
         }
     }, {
         key: 'setTile',
-        value: function setTile(tile, value) {
-            this.tiles[tile] = value;
+        value: function setTile(tile, type) {
+            this.tiles[tile] = type;
+        }
+    }, {
+        key: 'solve',
+        value: function solve(start, end) {
+            var _this3 = this;
+
+            var markVisited = function markVisited(tile) {
+                _this3.setTile(tile, VISITED);
+                _this3.drawTile(tile, 'red');
+            };
+
+            var current = void 0,
+                queue = [start];
+
+            markVisited(start);
+
+            while (current = queue.shift()) {
+                var directions = void 0;
+
+                while (directions = this.getAllowedDirections(current, PATH)) {
+
+                    directions.forEach(function (direction) {
+                        var tile = _this3.getNextTile(current, direction);
+
+                        markVisited(tile);
+
+                        if (tile === end) {
+                            queue = [];
+                        } else {
+                            queue.push(tile);
+                        }
+                    });
+                }
+            }
         }
     }, {
         key: '_log',
         value: function _log() {
-            var _this3 = this;
+            var _this4 = this;
 
             var output = '';
 
             this.tiles.forEach(function (tile, i) {
                 output += tile;
 
-                if ((i + 1) % _this3.columns === 0) {
+                if ((i + 1) % _this4.columns === 0) {
                     output += '\n';
                 }
             });
 
             console.log(output);
         }
-    }, {
-        key: 'columns',
-        get: function get() {
-            return this.width * 2 + 1;
-        }
-    }, {
-        key: 'rows',
-        get: function get() {
-            return this.height * 2 + 1;
-        }
     }]);
 
-    return Maze;
+    return _class;
 }();
-
-module.exports = Maze;
 
 },{}],2:[function(require,module,exports){
 'use strict';
@@ -198,26 +240,34 @@ module.exports = Maze;
     // TODO: put in one SETTINGS object
     MAZE_ELEMENT = document.getElementById('maze'),
         START_BUTTON = document.getElementById('start'),
-        WIDTH = 2,
-        HEIGHT = 2,
+        SOLVE__BUTTON = document.getElementById('solve'),
+        WIDTH = 50,
+        HEIGHT = 50,
 
 
     // TODO: make start tile customizable
     START = 1,
 
     // TODO: let user pick end point after generating
-    END = (WIDTH * 2 + 1) * (HEIGHT * 2 + 1) - 2;
+    END = (WIDTH * 2 + 1) * (HEIGHT * 2 + 1) - 2,
+        maze;
 
     function init() {
         START_BUTTON.addEventListener('click', start);
+        SOLVE__BUTTON.addEventListener('click', solve);
     }
 
     function start() {
-        var maze = new Maze(WIDTH, HEIGHT);
+        maze = new Maze(MAZE_ELEMENT, WIDTH, HEIGHT);
 
         maze.generatePath(START, END);
+        maze.drawMaze();
 
-        maze.draw(MAZE_ELEMENT);
+        SOLVE__BUTTON.removeAttribute('disabled');
+    }
+
+    function solve() {
+        maze.solve(START, END);
     }
 
     init();
