@@ -34,9 +34,35 @@ module.exports = class {
         this._canvas.clearRect(0, 0, this._element.width, this._element.height);
 
         this.tiles.forEach((type, tile) => {
+            // TODO: color map as private const
             let color = ['white', 'black'][type];
             this.drawTile(tile, color);
         });
+    }
+
+    drawSolution(steps, end) {
+        let path = [],
+            tile = end;
+
+        const drawTileLoop = (tile) => {
+            if(tile) {
+                this.drawTile(tile, 'red');
+                tile = path.pop();
+                this.drawTile(tile, 'red');
+                tile = path.pop();
+
+                setTimeout(() => {
+                    drawTileLoop(tile);
+                }, 5);
+            }
+        };
+
+        /*jshint boss:true */
+        do {
+            path.push(tile);
+        } while (tile = steps[tile]);
+
+        drawTileLoop(path.pop());
     }
 
     drawTile(tile, color) {
@@ -145,42 +171,52 @@ module.exports = class {
     }
 
     solve(start, end) {
-        let current,
+        let steps = {},
             queue = [start];
 
+        this._resetSolution();
+
         // TODO: find a better fix for private/inner functions
-        const markVisited = (tile) => {
+        const markVisited = (tile, previous) => {
+                steps[tile] = previous;
+
                 this.setTile(tile, VISITED);
-                this.drawTile(tile, 'red');
+                this.drawTile(tile, '#FF9999');
             },
-            solveNextTile = (direction) => {
+            solveNextTile = (current, direction) => {
                 let tile = this.getNextTile(current, direction);
 
-                markVisited(tile);
+                markVisited(tile, current);
 
                 if(tile === end) {
                     queue = [];
                 } else {
                     queue.push(tile);
                 }
+            },
+            solveLoop = (tile) => {
+                if (tile) {
+                    let directions = this.getAllowedDirections(tile, PATH) || [];
+
+                    directions.forEach((direction) => {
+                        solveNextTile(tile, direction);
+                    });
+
+                    setTimeout(() => {
+                        solveLoop(queue.shift());
+                    }, 10);
+                } else {
+                    this.drawSolution(steps, end);
+                }
             };
 
         markVisited(start);
 
-        /*jshint boss:true */
-        while(current = queue.shift()) {
-            let directions;
-
-            /*jshint boss:true */
-            while(directions = this.getAllowedDirections(current, PATH)) {
-
-                directions.forEach(solveNextTile);
-            }
-        }
+        solveLoop(queue.shift());
     }
 
 
-    _log() {
+    _logMaze() {
         let output = '';
 
         this.tiles.forEach((tile, i) => {
@@ -192,5 +228,13 @@ module.exports = class {
         });
 
         console.log(output);
+    }
+
+    _resetSolution() {
+        this.tiles = this.tiles.map((tile) => {
+            return tile !== WALL ? PATH : WALL;
+        });
+
+        this.drawMaze();
     }
 };

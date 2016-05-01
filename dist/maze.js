@@ -46,9 +46,38 @@ module.exports = function () {
             this._canvas.clearRect(0, 0, this._element.width, this._element.height);
 
             this.tiles.forEach(function (type, tile) {
+                // TODO: color map as private const
                 var color = ['white', 'black'][type];
                 _this.drawTile(tile, color);
             });
+        }
+    }, {
+        key: 'drawSolution',
+        value: function drawSolution(steps, end) {
+            var _this2 = this;
+
+            var path = [],
+                tile = end;
+
+            var drawTileLoop = function drawTileLoop(tile) {
+                if (tile) {
+                    _this2.drawTile(tile, 'red');
+                    tile = path.pop();
+                    _this2.drawTile(tile, 'red');
+                    tile = path.pop();
+
+                    setTimeout(function () {
+                        drawTileLoop(tile);
+                    }, 5);
+                }
+            };
+
+            /*jshint boss:true */
+            do {
+                path.push(tile);
+            } while (tile = steps[tile]);
+
+            drawTileLoop(path.pop());
         }
     }, {
         key: 'drawTile',
@@ -103,7 +132,7 @@ module.exports = function () {
     }, {
         key: 'getAllowedDirections',
         value: function getAllowedDirections(tile, allowedType) {
-            var _this2 = this;
+            var _this3 = this;
 
             var step = arguments.length <= 2 || arguments[2] === undefined ? 1 : arguments[2];
 
@@ -112,11 +141,11 @@ module.exports = function () {
                 var nextRoom = tile;
 
                 for (var i = 0; i < step; i++) {
-                    nextRoom = _this2.getNextTile(nextRoom, direction);
+                    nextRoom = _this3.getNextTile(nextRoom, direction);
 
-                    var type = _this2.getTileType(nextRoom),
+                    var type = _this3.getTileType(nextRoom),
                         isAllowed = type === allowedType,
-                        isIntersection = _this2.isIntersection(nextRoom);
+                        isIntersection = _this3.isIntersection(nextRoom);
 
                     if (!isAllowed || isIntersection) {
                         return false;
@@ -174,57 +203,76 @@ module.exports = function () {
     }, {
         key: 'solve',
         value: function solve(start, end) {
-            var _this3 = this;
+            var _this4 = this;
 
-            var current = void 0,
+            var steps = {},
                 queue = [start];
 
-            // TODO: find a better fix for private/inner functions
-            var markVisited = function markVisited(tile) {
-                _this3.setTile(tile, VISITED);
-                _this3.drawTile(tile, 'red');
-            },
-                solveNextTile = function solveNextTile(direction) {
-                var tile = _this3.getNextTile(current, direction);
+            this._resetSolution();
 
-                markVisited(tile);
+            // TODO: find a better fix for private/inner functions
+            var markVisited = function markVisited(tile, previous) {
+                steps[tile] = previous;
+
+                _this4.setTile(tile, VISITED);
+                _this4.drawTile(tile, '#FF9999');
+            },
+                solveNextTile = function solveNextTile(current, direction) {
+                var tile = _this4.getNextTile(current, direction);
+
+                markVisited(tile, current);
 
                 if (tile === end) {
                     queue = [];
                 } else {
                     queue.push(tile);
                 }
+            },
+                solveLoop = function solveLoop(tile) {
+                if (tile) {
+                    var directions = _this4.getAllowedDirections(tile, PATH) || [];
+
+                    directions.forEach(function (direction) {
+                        solveNextTile(tile, direction);
+                    });
+
+                    setTimeout(function () {
+                        solveLoop(queue.shift());
+                    }, 10);
+                } else {
+                    _this4.drawSolution(steps, end);
+                }
             };
 
             markVisited(start);
 
-            /*jshint boss:true */
-            while (current = queue.shift()) {
-                var directions = void 0;
-
-                /*jshint boss:true */
-                while (directions = this.getAllowedDirections(current, PATH)) {
-
-                    directions.forEach(solveNextTile);
-                }
-            }
+            solveLoop(queue.shift());
         }
     }, {
-        key: '_log',
-        value: function _log() {
-            var _this4 = this;
+        key: '_logMaze',
+        value: function _logMaze() {
+            var _this5 = this;
 
             var output = '';
 
             this.tiles.forEach(function (tile, i) {
                 output += tile;
 
-                if ((i + 1) % _this4.columns === 0) {
+                if ((i + 1) % _this5.columns === 0) {
                     output += '\n';
                 }
             });
 
             console.log(output);
+        }
+    }, {
+        key: '_resetSolution',
+        value: function _resetSolution() {
+            this.tiles = this.tiles.map(function (tile) {
+                return tile !== WALL ? PATH : WALL;
+            });
+
+            this.drawMaze();
         }
     }]);
 
