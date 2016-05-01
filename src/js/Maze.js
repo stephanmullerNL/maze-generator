@@ -20,13 +20,13 @@ class Maze {
         }
 
         const canvas = element.getContext('2d'),
-            wallSize = 1, // TODO: calculate or make customisable
+            wallSize = Math.floor(40 / this.width),
             tileSize = (element.width - ((this.width + 1) * wallSize)) / this.width;
 
         canvas.clearRect(0, 0, element.width, element.height);
 
         this.tiles.forEach((value, tile) => {
-            const col = this.getColumn(tile), // TODO: figure out new algorithms for 0-indexed
+            const col = this.getColumn(tile),
                 row = this.getRow(tile),
                 x = (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * tileSize,
                 y = (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * tileSize,
