@@ -1,0 +1,46 @@
+html {
+    font-size: 10px;
+}
+
+body {
+    margin: 0 auto;
+    width: 600px;
+}
+
+#maze {
+    display: block;
+    margin: 0 auto;
+    overflow: auto;
+}
+
+section {
+    background: #eee;
+    border: 1px solid #999;
+    box-sizing: border-box;
+    float: left;
+    padding: 1em;
+    margin: 1em;
+    width: calc(250px - 2em);
+}
+
+label {
+    display: block;
+    float: left;
+    margin-right: 1em;
+    margin-bottom: 1em;
+    width: calc(50% - 2em);
+}
+
+input[type="text"] {
+    width: 50px;
+}
+
+.clearfix:before,
+.clearfix:after {
+    content: " "; /* 1 */
+    display: table; /* 2 */
+}
+
+.clearfix:after {
+    clear: both;
+}

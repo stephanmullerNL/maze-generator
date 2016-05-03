@@ -8,7 +8,8 @@ const PATH = 0,
 module.exports = class {
 
     constructor(element, width, height) {
-        const tiles = (width * 2 + 1) * (height * 2 + 1);
+        const tiles = (width * 2 + 1) * (height * 2 + 1),
+            maxDimension = Math.max(width, height);
 
         // TODO: move to private vars but with getters/setters
         this.width = width;
@@ -16,8 +17,8 @@ module.exports = class {
         this.columns = width * 2 + 1;
         this.rows = height * 2 + 1;
 
-        this.wallSize = Math.ceil(40 / width);
-        this.roomSize = Math.floor((element.width - ((width + 1) * this.wallSize)) / width);
+        this.wallSize = Math.ceil(40 / maxDimension);
+        this.roomSize = Math.floor((element.width - ((maxDimension + 1) * this.wallSize)) / maxDimension);
 
         this._DIRECTIONS = {
             left: -1,
@@ -243,43 +244,66 @@ module.exports = class {
     }
 };
 },{}],2:[function(require,module,exports){
-// TODO: split into modules
 // TODO: MazeGenerator class?
-// TODO: implement options object as argument
 (function () {
 
-    var Maze = require('./Maze.js'),
+    const Maze = require('./Maze.js');
+    const elements = {
+        maze: document.getElementById('maze'),
 
-    // TODO: put in one SETTINGS object
-        MAZE_ELEMENT = document.getElementById('maze'),
-        START_BUTTON = document.getElementById('start'),
-        SOLVE__BUTTON = document.getElementById('solve'),
-        WIDTH = 50,
-        HEIGHT = 50,
+        // Generate
+        height: document.getElementById('height'),
+        width: document.getElementById('width'),
+        start: document.getElementById('start'),
+        finish: document.getElementById('finish'),
 
-    // TODO: make start tile customizable
-        START = 1,
-    // TODO: let user pick end point after generating
-        END = (WIDTH * 2 + 1) * (HEIGHT * 2 + 1) - 2,
+        generateButton:  document.getElementById('generate'),
 
+        // Solve
+        solveButton: document.getElementById('solve')
+    };
+
+    let settings = {
+            get height() {
+               return parseInt(elements.height.value) || 50;
+            },
+            get width() {
+                return parseInt(elements.width.value) || 50;
+            },
+
+            get start() {
+                return parseInt(elements.start.value) || 1;
+            },
+            get finish() {
+                // TODO: let user pick end point after generating
+                return parseInt(elements.finish.value) || 10199;
+            }
+        },
         maze;
 
     function init() {
-        START_BUTTON.addEventListener('click', start);
-        SOLVE__BUTTON.addEventListener('click', solve);
+        elements.height.addEventListener('change', updateFinish);
+        elements.width.addEventListener('change', updateFinish);
+
+        elements.generateButton.addEventListener('click', start);
+        elements.solveButton.addEventListener('click', solve);
     }
 
     function start() {
-        maze = new Maze(MAZE_ELEMENT, WIDTH, HEIGHT);
+        maze = new Maze(elements.maze, settings.width, settings.height);
 
-        maze.generatePath(START, END);
+        maze.generatePath(settings.start, settings.finish);
         maze.drawMaze();
 
-        SOLVE__BUTTON.removeAttribute('disabled');
+        elements.solveButton.removeAttribute('disabled');
     }
 
     function solve() {
-        maze.solve(START, END);
+        maze.solve(settings.start, settings.finish);
+    }
+
+    function updateFinish() {
+        elements.finish.value = (settings.width * 2 + 1) * (settings.height * 2 + 1) - 2;
     }
 
     init();

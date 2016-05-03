@@ -30,6 +30,12 @@ var js = {
     dist: 'dist/'
 };
 
+var css = {
+    src: 'src/css/',
+    main: 'style.css',
+    dist: 'dist/'
+};
+
 // Log
 var log = function ( err ) {
     util.log( chalk.red( 'ERROR:' ), chalk.gray ( err.message ) );
@@ -86,6 +92,12 @@ gulp.task( 'js-prod', function () {
 
 } );
 
+gulp.task('css', function () {
+
+    gulp.src(css.src + css.main)
+        .pipe(gulp.dest(css.dist));
+});
+
 // Task - Devolopment
 gulp.task( 'dev', [ 'js-dev' ] );
 
@@ -96,6 +108,7 @@ gulp.task( 'prod', [ 'js-prod' ] );
 gulp.task( 'watch', [ 'sync' ], function () {
 
     gulp.watch( js.src + '**/*.js', [ 'js-dev' ] );
+    gulp.watch( css.src + '**/*.css', [ 'css' ] );
     gulp.watch( '**/*.php' ).on( 'change', function ( file ) {
         return gulp.src( file.path )
             .pipe( reload( { stream: true } ) );
@@ -107,4 +120,4 @@ gulp.task( 'watch', [ 'sync' ], function () {
 } );
 
 // Task - Default
-gulp.task( 'default', ['watch', 'dev']);
+gulp.task( 'default', ['watch']);
