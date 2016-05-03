@@ -1,4 +1,3 @@
-// TODO: MazeGenerator class?
 (function () {
 
     const Maze = require('./Maze.js');

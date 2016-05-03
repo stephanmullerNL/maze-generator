@@ -8,23 +8,20 @@ const PATH = 0,
 module.exports = class {
 
     constructor(element, width, height) {
-        const tiles = (width * 2 + 1) * (height * 2 + 1),
-            maxDimension = Math.max(width, height);
-
-        // TODO: move to private vars but with getters/setters
-        this.width = width;
-        this.height = height;
-        this.columns = width * 2 + 1;
-        this.rows = height * 2 + 1;
+        const tiles = (width * 2 + 1) * (height * 2 + 1);
+        const maxDimension = Math.max(width, height);
 
         this.wallSize = Math.ceil(40 / maxDimension);
         this.roomSize = Math.floor((element.width - ((maxDimension + 1) * this.wallSize)) / maxDimension);
 
+        this._columns = width * 2 + 1;
+        this._rows = height * 2 + 1;
+        
         this._DIRECTIONS = {
             left: -1,
             right: 1,
-            up: -this.columns,
-            down: this.columns
+            up: -this._columns,
+            down: this._columns
         };
         
         this._element = element;
@@ -140,7 +137,7 @@ module.exports = class {
     }
 
     getColumn(tile) {
-        return Math.floor(tile % this.columns);
+        return Math.floor(tile % this._columns);
     }
 
     getNextTile(tile, direction) {
@@ -150,7 +147,7 @@ module.exports = class {
     }
 
     getRow(tile) {
-        return Math.floor((tile) / this.columns);
+        return Math.floor((tile) / this._columns);
     }
 
     getTileType(tile) {
@@ -213,8 +210,6 @@ module.exports = class {
                 }
             };
 
-        // wat doet dit?
-        // ::markVisited(start);
         markVisited(start);
 
         solveLoop(queue.shift());
@@ -227,7 +222,7 @@ module.exports = class {
         this.tiles.forEach((tile, i) => {
             output += tile;
 
-            if((i + 1) % this.columns === 0) {
+            if((i + 1) % this._columns === 0) {
                 output += '\n';
             }
         });
@@ -244,7 +239,6 @@ module.exports = class {
     }
 };
 },{}],2:[function(require,module,exports){
-// TODO: MazeGenerator class?
 (function () {
 
     const Maze = require('./Maze.js');
