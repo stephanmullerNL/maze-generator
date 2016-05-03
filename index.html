@@ -7,7 +7,21 @@
 
         <section>
             <h2>Generate maze</h2>
-            <button id="start">Start!</button>
+            <div class="clearfix">
+                <label>
+                    Width: <input type="text" value="50" id="width">
+                </label>
+                <label>
+                    Height: <input type="text" value="50" id="height">
+                </label>
+                <label>
+                    Start: <input type="text" value="1" id="start">
+                </label>
+                <label>
+                    Finish: <input type="text" value="10199" id="finish">
+                </label>
+            </div>
+            <button id="generate">Generate!</button>
         </section>
 
         <section>
@@ -15,8 +29,8 @@
             <button disabled="disabled" id="solve">Solve!</button>
         </section>
 
-        <canvas id="maze" width="500" height="500"></canvas>
+        <canvas id="maze" width="600" height="600"></canvas>
 
-        <script src="dist/maze.js"></script>
+        <script src="dist/main.js"></script>
     </body>
 </html>

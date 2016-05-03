@@ -7,7 +7,8 @@ const PATH = 0,
 module.exports = class {
 
     constructor(element, width, height) {
-        const tiles = (width * 2 + 1) * (height * 2 + 1);
+        const tiles = (width * 2 + 1) * (height * 2 + 1),
+            maxDimension = Math.max(width, height);
 
         // TODO: move to private vars but with getters/setters
         this.width = width;
@@ -15,8 +16,8 @@ module.exports = class {
         this.columns = width * 2 + 1;
         this.rows = height * 2 + 1;
 
-        this.wallSize = Math.ceil(40 / width);
-        this.roomSize = Math.floor((element.width - ((width + 1) * this.wallSize)) / width);
+        this.wallSize = Math.ceil(40 / maxDimension);
+        this.roomSize = Math.floor((element.width - ((maxDimension + 1) * this.wallSize)) / maxDimension);
 
         this._DIRECTIONS = {
             left: -1,
