@@ -1,3 +1,4 @@
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // TODO: unit tests
 // TODO: implement weakmaps
 const PATH = 0,
@@ -241,3 +242,46 @@ module.exports = class {
         this.drawMaze();
     }
 };
+},{}],2:[function(require,module,exports){
+// TODO: split into modules
+// TODO: MazeGenerator class?
+// TODO: implement options object as argument
+(function () {
+
+    var Maze = require('./Maze.js'),
+
+    // TODO: put in one SETTINGS object
+        MAZE_ELEMENT = document.getElementById('maze'),
+        START_BUTTON = document.getElementById('start'),
+        SOLVE__BUTTON = document.getElementById('solve'),
+        WIDTH = 50,
+        HEIGHT = 50,
+
+    // TODO: make start tile customizable
+        START = 1,
+    // TODO: let user pick end point after generating
+        END = (WIDTH * 2 + 1) * (HEIGHT * 2 + 1) - 2,
+
+        maze;
+
+    function init() {
+        START_BUTTON.addEventListener('click', start);
+        SOLVE__BUTTON.addEventListener('click', solve);
+    }
+
+    function start() {
+        maze = new Maze(MAZE_ELEMENT, WIDTH, HEIGHT);
+
+        maze.generatePath(START, END);
+        maze.drawMaze();
+
+        SOLVE__BUTTON.removeAttribute('disabled');
+    }
+
+    function solve() {
+        maze.solve(START, END);
+    }
+
+    init();
+}());
+},{"./Maze.js":1}]},{},[2]);

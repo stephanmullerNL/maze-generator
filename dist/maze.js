@@ -5,6 +5,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+// TODO: unit tests
 // TODO: implement weakmaps
 var PATH = 0,
     WALL = 1,
@@ -244,6 +245,8 @@ module.exports = function () {
                 }
             };
 
+            // wat doet dit?
+            // ::markVisited(start);
             markVisited(start);
 
             solveLoop(queue.shift());
@@ -282,10 +285,10 @@ module.exports = function () {
 },{}],2:[function(require,module,exports){
 'use strict';
 
+// TODO: fix gulp jshint
 // TODO: split into modules
 // TODO: MazeGenerator class?
 // TODO: implement options object as argument
-// TODO: implement maze solver
 (function () {
 
     var Maze = require('./Maze.js'),

@@ -1,7 +1,6 @@
 // TODO: split into modules
 // TODO: MazeGenerator class?
 // TODO: implement options object as argument
-// TODO: implement maze solver
 (function () {
 
     var Maze = require('./Maze.js'),

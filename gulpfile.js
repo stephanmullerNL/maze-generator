@@ -1,80 +1,110 @@
-var gulp = require('gulp');
+// Require
+var gulp         = require( 'gulp' );
+var babel        = require('gulp-babel');
 
-var babel      = require('babelify'),
-    browserify = require('browserify'),
-    buffer     = require('vinyl-buffer'),
-    connect    = require('gulp-connect'),
-    del        = require('del'),
-    jshint     = require('gulp-jshint'),
-    sourcemaps = require('gulp-sourcemaps'),
-    source     = require('vinyl-source-stream'),
-    uglify     = require('gulp-uglify'),
-    watchify   = require('watchify');
+// Require - Browser Sync
+var sync         = require( 'browser-sync' );
+var reload       = sync.reload;
 
-var config = {
-    dest: "./dist/",
-    scripts: {
-        all: "src/**/*.js",
-        main: "src/js/main.js",
-        options: {
-            mangle: false
-        },
-        out: "maze.js"
-    },
-    server: {
-        root: '',
-        port: 1337
-    }
+// Require - JS
+var browserify   = require( 'browserify' );
+var source       = require( 'vinyl-source-stream' );
+var buffer       = require( 'vinyl-buffer' );
+var uglify       = require( 'gulp-uglify' );
+var hint         = require( 'gulp-jshint' );
+var stylish      = require( 'jshint-stylish' );
+
+// Require - Versioning
+var header       = require( 'gulp-header' );
+var pkg          = require( './package.json' );
+var banner       = ['/** <%= pkg.name %> - <%= pkg.version %> **/\n'];
+
+// Require - Utilites
+var rename       = require( 'gulp-rename' );
+var util         = require( 'gulp-util' );
+var chalk        = require( 'chalk' );
+
+var js = {
+    src:  'src/js/',
+    main: 'main.js',
+    dist: 'dist/'
 };
 
-function compile(watch) {
-    var bundler = watchify(
-                    browserify(config.scripts.main, { debug: true })
-                    .transform(babel, { presets: ["es2015"] })
-                );
+// Log
+var log = function ( err ) {
+    util.log( chalk.red( 'ERROR:' ), chalk.gray ( err.message ) );
+    this.emit( 'end' );
+};
 
-    function rebundle() {
-        bundler.bundle()
-            .on('error', function(err) { console.error(err); this.emit('end'); })
-            .pipe(source(config.scripts.out))
-            .pipe(buffer())
-            .pipe(sourcemaps.init({ loadMaps: true }))
-            .pipe(sourcemaps.write('./'))
-            .pipe(gulp.dest(config.dest));
-    }
+// Task - Browser Sync
+gulp.task( 'sync' , function () {
 
-    if (watch) {
-        bundler.on('update', function() {
-            console.log('-> bundling...');
-            rebundle();
-        });
-    }
+    return sync.init( {
+        server: {
+            baseDir: './'
+        },
+        notify: false,
+        logConnections: true
+    } );
 
-    rebundle();
-}
-
-
-gulp.task('clean', function() {
-    del(config.dest + "/**/*");
 });
 
-gulp.task('connect', function() {
-    connect.server(config.server);
-});
+// Task - JS Development
+gulp.task( 'js-dev', function () {
 
-gulp.task('hint', function() {
-    gulp.src(config.scripts.all)
-        .pipe(jshint())
-        .pipe(jshint.reporter('default'));
-});
+    gulp.src( js.src + '**/*.js' )
+        .pipe( hint( '.jshintrc' ) )
+        .pipe( hint.reporter( stylish ) );
 
-gulp.task('build', function() {
-    return compile();
-});
+    return browserify( js.src + js.main )
+        .bundle()
+        .on( 'error', log )
+        .pipe( source( js.main ) )
+        .pipe( buffer() )
+        .pipe( gulp.dest( js.dist ) )
+        .pipe( reload( { stream: true } ) );
 
-gulp.task('watch', function() {
-    return compile(true);
-});
+} );
 
-//gulp.task('default', ['watch']);
-gulp.task('default', ['clean', 'hint', 'watch', 'connect']);
+// Task - JS Production
+gulp.task( 'js-prod', function () {
+
+    return browserify( js.src + js.main )
+
+        .bundle()
+        .on( 'error', log )
+        .pipe( source( js.main ) )
+        .pipe( buffer() )
+        .pipe( babel() )
+        .pipe( uglify() )
+        .on( 'error', log )
+        .pipe( header( banner, { pkg : pkg } ) )
+        .on( 'error', log )
+        .pipe( rename( { suffix: '.min' } ) )
+        .on( 'error', log )
+        .pipe( gulp.dest( js.dist ) );
+
+} );
+
+// Task - Devolopment
+gulp.task( 'dev', [ 'js-dev' ] );
+
+// Task - Production
+gulp.task( 'prod', [ 'js-prod' ] );
+
+// Task - Watch
+gulp.task( 'watch', [ 'sync' ], function () {
+
+    gulp.watch( js.src + '**/*.js', [ 'js-dev' ] );
+    gulp.watch( '**/*.php' ).on( 'change', function ( file ) {
+        return gulp.src( file.path )
+            .pipe( reload( { stream: true } ) );
+    } );
+    gulp.watch( '**/*.html' ).on( 'change', function ( file ) {
+        return gulp.src( file.path )
+            .pipe( reload( { stream: true } ) );
+    } );
+} );
+
+// Task - Default
+gulp.task( 'default', ['watch', 'dev']);
