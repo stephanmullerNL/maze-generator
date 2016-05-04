@@ -32,7 +32,8 @@
                 return parseInt(elements.finish.value) || 10199;
             }
         },
-        maze;
+        maze,
+        stopSolving = function() {};
 
     function init() {
         elements.height.addEventListener('change', updateFinish);
@@ -43,16 +44,17 @@
     }
 
     function start() {
+        stopSolving();
         maze = new Maze(elements.maze, settings.width, settings.height);
 
-        maze.generatePath(settings.start, settings.finish);
-        maze.drawMaze();
+        let path = maze.generatePath('depthFirstSearch', settings.start, settings.finish);
+        maze.drawMaze(path);
 
         elements.solveButton.removeAttribute('disabled');
     }
 
     function solve() {
-        maze.solve(settings.start, settings.finish);
+        stopSolving = maze.solve(settings.start, settings.finish);
     }
 
     function updateFinish() {

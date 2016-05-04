@@ -1,9 +1,64 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+const PATH = 0;
+const WALL = 1;
+
+class Algorithms {
+
+    depthFirstSearch(maze, from, direction) {
+        let path = [];
+        let x = 0;
+
+        const getDirections = function(from, direction) {
+            let directions = maze.getAllowedDirections(from, WALL, 2).filter((direction) => {
+                let tile = maze.getNextTile(from, direction);
+                return path.indexOf(tile) === -1
+            });
+
+            return directions.length ? directions : null;
+        };
+
+        const walk = function(from, direction) {
+            let allowedDirections,
+                lastStep,
+                wall = maze.isWall(from) ? from : maze.getNextTile(from, direction),
+                room = maze.getNextTile(wall, direction);
+
+            path.push(wall);
+            path.push(room);
+            //maze.setTile(wall, PATH);
+            //maze.setTile(room, PATH);
+
+            /*jshint boss:true */
+            while((allowedDirections = getDirections(room, direction)) && x++ < maze.tiles.length) {
+                // TODO: Add option for horizontal/vertical bias
+                let rnd = Math.floor(Math.random() * allowedDirections.length),
+                    nextDirection = allowedDirections[rnd];
+
+                lastStep = walk(room, nextDirection);
+            }
+
+            return lastStep || room;
+        };
+
+        try {
+            walk(from, direction);
+        } catch (e) {
+            alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
+        }
+
+        return path;
+    }
+}
+
+module.exports = new Algorithms();
+},{}],2:[function(require,module,exports){
 // TODO: unit tests
 // TODO: implement weakmaps
-const PATH = 0,
-      WALL = 1,
-      VISITED = 2;
+const PATH = 0;
+const WALL = 1;
+const VISITED = 2;
+
+const Algorithms = require('./Algorithms.js');
 
 module.exports = class {
 
@@ -30,10 +85,18 @@ module.exports = class {
         this.tiles = new Array(tiles).fill(WALL);
     }
 
-    drawMaze() {
+    drawMaze(path) {
+        let maze = this.tiles;
+
+        if(path) {
+            path.forEach((tile) => {
+                maze[tile] = PATH;
+            })
+        }
+
         this._canvas.clearRect(0, 0, this._element.width, this._element.height);
 
-        this.tiles.forEach((type, tile) => {
+        maze.forEach((type, tile) => {
             // TODO: color map as private const
             let color = ['white', 'black'][type];
             this.drawTile(tile, color);
@@ -53,7 +116,7 @@ module.exports = class {
 
                 setTimeout(() => {
                     drawTileLoop(tile);
-                }, 5);
+                }, 3);
             }
         };
 
@@ -77,39 +140,19 @@ module.exports = class {
         this._canvas.fillRect(x, y, width, height);
     }
 
-    generatePath(start, end) {
+    generatePath(algorithm, start, end) {
+
         // TODO: move to separate file?
         // TODO: implement variations (depth first, breadth first, stacked, recursive)
         let direction = this.getAllowedDirections(start, WALL)[0];
 
-        try {
-            this.walk(start, direction);
-        } catch (e) {
-            alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
-        }
+        let path = Algorithms[algorithm](this, start, direction);
 
-        this.setTile(end, 0);
-    }
+        path.push(end);
 
-    walk(from, direction) {
-        let allowedDirections,
-            lastStep,
-            wall = this.isWall(from) ? from : this.getNextTile(from, direction),
-            room = this.getNextTile(wall, direction);
+        console.log(path);
 
-        this.setTile(wall, PATH);
-        this.setTile(room, PATH);
-
-        /*jshint boss:true */
-        while(allowedDirections = this.getAllowedDirections(room, WALL, 2)) {
-            // TODO: Add option for horizontal/vertical bias
-            let rnd = Math.floor(Math.random() * allowedDirections.length),
-                nextDirection = allowedDirections[rnd];
-
-            lastStep = this.walk(room, nextDirection);
-        }
-
-        return lastStep || room;
+        return path;
     }
 
     getAllowedDirections(tile, allowedType, step = 1) {
@@ -172,7 +215,8 @@ module.exports = class {
 
     solve(start, end) {
         let steps = {},
-            queue = [start];
+            queue = [start],
+            stopped = false;
 
         this._resetSolution();
 
@@ -195,7 +239,7 @@ module.exports = class {
                 }
             },
             solveLoop = (tile) => {
-                if (tile) {
+                if (tile && !stopped) {
                     let directions = this.getAllowedDirections(tile, PATH) || [];
 
                     directions.forEach((direction) => {
@@ -204,7 +248,7 @@ module.exports = class {
 
                     setTimeout(() => {
                         solveLoop(queue.shift());
-                    }, 10);
+                    }, 5);
                 } else {
                     this.drawSolution(steps, end);
                 }
@@ -213,6 +257,10 @@ module.exports = class {
         markVisited(start);
 
         solveLoop(queue.shift());
+
+        return function stopSolving() {
+            stopped = true;
+        }
     }
 
 
@@ -238,7 +286,7 @@ module.exports = class {
         this.drawMaze();
     }
 };
-},{}],2:[function(require,module,exports){
+},{"./Algorithms.js":1}],3:[function(require,module,exports){
 (function () {
 
     const Maze = require('./Maze.js');
@@ -273,7 +321,8 @@ module.exports = class {
                 return parseInt(elements.finish.value) || 10199;
             }
         },
-        maze;
+        maze,
+        stopSolving = function() {};
 
     function init() {
         elements.height.addEventListener('change', updateFinish);
@@ -284,16 +333,17 @@ module.exports = class {
     }
 
     function start() {
+        stopSolving();
         maze = new Maze(elements.maze, settings.width, settings.height);
 
-        maze.generatePath(settings.start, settings.finish);
-        maze.drawMaze();
+        let path = maze.generatePath('depthFirstSearch', settings.start, settings.finish);
+        maze.drawMaze(path);
 
         elements.solveButton.removeAttribute('disabled');
     }
 
     function solve() {
-        maze.solve(settings.start, settings.finish);
+        stopSolving = maze.solve(settings.start, settings.finish);
     }
 
     function updateFinish() {
@@ -302,4 +352,4 @@ module.exports = class {
 
     init();
 }());
-},{"./Maze.js":1}]},{},[2]);
+},{"./Maze.js":2}]},{},[3]);

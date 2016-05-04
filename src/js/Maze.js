@@ -1,8 +1,10 @@
 // TODO: unit tests
 // TODO: implement weakmaps
-const PATH = 0,
-      WALL = 1,
-      VISITED = 2;
+const PATH = 0;
+const WALL = 1;
+const VISITED = 2;
+
+const Algorithms = require('./Algorithms.js');
 
 module.exports = class {
 
@@ -29,10 +31,18 @@ module.exports = class {
         this.tiles = new Array(tiles).fill(WALL);
     }
 
-    drawMaze() {
+    drawMaze(path) {
+        let maze = this.tiles;
+
+        if(path) {
+            path.forEach((tile) => {
+                maze[tile] = PATH;
+            })
+        }
+
         this._canvas.clearRect(0, 0, this._element.width, this._element.height);
 
-        this.tiles.forEach((type, tile) => {
+        maze.forEach((type, tile) => {
             // TODO: color map as private const
             let color = ['white', 'black'][type];
             this.drawTile(tile, color);
@@ -52,7 +62,7 @@ module.exports = class {
 
                 setTimeout(() => {
                     drawTileLoop(tile);
-                }, 5);
+                }, 3);
             }
         };
 
@@ -76,39 +86,19 @@ module.exports = class {
         this._canvas.fillRect(x, y, width, height);
     }
 
-    generatePath(start, end) {
+    generatePath(algorithm, start, end) {
+
         // TODO: move to separate file?
         // TODO: implement variations (depth first, breadth first, stacked, recursive)
         let direction = this.getAllowedDirections(start, WALL)[0];
 
-        try {
-            this.walk(start, direction);
-        } catch (e) {
-            alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
-        }
+        let path = Algorithms[algorithm](this, start, direction);
 
-        this.setTile(end, 0);
-    }
+        path.push(end);
 
-    walk(from, direction) {
-        let allowedDirections,
-            lastStep,
-            wall = this.isWall(from) ? from : this.getNextTile(from, direction),
-            room = this.getNextTile(wall, direction);
+        console.log(path);
 
-        this.setTile(wall, PATH);
-        this.setTile(room, PATH);
-
-        /*jshint boss:true */
-        while(allowedDirections = this.getAllowedDirections(room, WALL, 2)) {
-            // TODO: Add option for horizontal/vertical bias
-            let rnd = Math.floor(Math.random() * allowedDirections.length),
-                nextDirection = allowedDirections[rnd];
-
-            lastStep = this.walk(room, nextDirection);
-        }
-
-        return lastStep || room;
+        return path;
     }
 
     getAllowedDirections(tile, allowedType, step = 1) {
@@ -171,7 +161,8 @@ module.exports = class {
 
     solve(start, end) {
         let steps = {},
-            queue = [start];
+            queue = [start],
+            stopped = false;
 
         this._resetSolution();
 
@@ -194,7 +185,7 @@ module.exports = class {
                 }
             },
             solveLoop = (tile) => {
-                if (tile) {
+                if (tile && !stopped) {
                     let directions = this.getAllowedDirections(tile, PATH) || [];
 
                     directions.forEach((direction) => {
@@ -203,7 +194,7 @@ module.exports = class {
 
                     setTimeout(() => {
                         solveLoop(queue.shift());
-                    }, 10);
+                    }, 5);
                 } else {
                     this.drawSolution(steps, end);
                 }
@@ -212,6 +203,10 @@ module.exports = class {
         markVisited(start);
 
         solveLoop(queue.shift());
+
+        return function stopSolving() {
+            stopped = true;
+        }
     }
 
 
