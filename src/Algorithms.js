@@ -46,11 +46,16 @@ module.exports = class {
         let tile;
 
         const getTile = (direction) => this._maze.getNextTile(tile, direction);
-        const unvisitedTiles = (tile) => visited.indexOf(tile) === -1 && this._maze._path.indexOf(tile) > -1;
+        const unvisitedTiles = (tile) => {
+            let notVisited = visited.indexOf(tile) === -1;
+            let inMaze = this._maze._path.indexOf(tile) > -1;
+
+            return notVisited && inMaze;
+        };
 
         const visitNext = (nextTile) => {
             steps[nextTile] = tile;
-            visited.push(tile);
+            visited.push(nextTile);
 
             if(nextTile === end) {
                 queue = [];
@@ -70,7 +75,7 @@ module.exports = class {
                 .forEach(visitNext);
         }
 
-        return steps;
+        return [visited, steps];
     }
 
     // TODO: Add option for horizontal/vertical bias

@@ -53,7 +53,11 @@
     }
 
     function solve() {
-        maze.solve(settings.start, settings.finish);
+        elements.solveButton.setAttribute('disabled', 'disabled');
+
+        maze.solve(settings.start, settings.finish).then(() => {
+            elements.solveButton.removeAttribute('disabled');
+        });
     }
 
     function updateFinish() {

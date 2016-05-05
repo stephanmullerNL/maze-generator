@@ -3,8 +3,10 @@ const PATH = 0;
 const WALL = 1;
 
 const Algorithms = require('./Algorithms.js');
+const Draw = require('./Draw.js');
 
-let algorithms;
+let algorithms,
+    mazeDrawer;
 
 module.exports = class {
 
@@ -32,40 +34,13 @@ module.exports = class {
         this._path = [];
 
         algorithms = new Algorithms(this);
+        mazeDrawer = new Draw(this);
     }
 
-    applyPath() {
-        this._path.forEach((tile) => {
+    applyPath(path) {
+        path.forEach((tile) => {
             this._tiles[tile] = PATH;
         });
-    }
-
-    drawMaze() {
-        this._canvas.clearRect(0, 0, this._element.width, this._element.height);
-
-        this._tiles.forEach((type, tile) => {
-            // TODO: color map as private const
-            let color = ['white', 'black'][type];
-            this.drawTile(tile, color);
-        });
-    }
-
-    drawPath(path, color) {
-        path.forEach((tile) => {
-            this.drawTile(tile, color);
-        });
-    }
-
-    drawTile(tile, color) {
-        const col = this.getColumn(tile),
-            row = this.getRow(tile),
-            x = (Math.ceil(col / 2) * this.wallSize) + (Math.ceil(col / 2) - col % 2) * this.roomSize,
-            y = (Math.ceil(row / 2) * this.wallSize) + (Math.ceil(row / 2) - row % 2) * this.roomSize,
-            width  = (col % 2) ? this.roomSize : this.wallSize,
-            height = (row % 2) ? this.roomSize : this.wallSize;
-
-        this._canvas.fillStyle = color;
-        this._canvas.fillRect(x, y, width, height);
     }
 
     generatePath(algorithm, start, end) {
@@ -74,11 +49,13 @@ module.exports = class {
         let firstRoom = this.getNextTile(start, direction);
         let initialPath = [start, firstRoom, end];
 
-        this._path = algorithms[algorithm](firstRoom, initialPath);
+        let path = algorithms[algorithm](firstRoom, initialPath);
 
-        this.drawMaze();
-        this.drawPath(this._path, 'white');
-        this.applyPath();
+        mazeDrawer.drawMaze();
+        mazeDrawer.drawPath(path, 'white');
+
+        this.applyPath(path);
+        this._path = path;
     }
 
     getAllowedDirections(tile, step = 1) {
@@ -138,8 +115,7 @@ module.exports = class {
     }
 
     solve(start, end) {
-        let steps = algorithms.solve(start, end);
-        let visited = Object.keys(steps);
+        const [visited, steps] = algorithms.solve(start, end);
 
         let solution = [];
         let tile = end;
@@ -149,8 +125,9 @@ module.exports = class {
             solution.push(tile);
         } while (tile = steps[tile]);
 
-        this.drawPath(visited, '#f99');
-        this.drawPath(solution, 'red');
+        return mazeDrawer.drawPath(visited, '#f99').then(
+            () => mazeDrawer.drawPath(solution, 'red')
+        );
     }
 
     _logMaze(path) {
