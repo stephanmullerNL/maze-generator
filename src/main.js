@@ -47,14 +47,13 @@
         stopSolving();
         maze = new Maze(elements.maze, settings.width, settings.height);
 
-        let path = maze.generatePath('depthFirstSearch', settings.start, settings.finish);
-        maze.drawMaze(path);
+        maze.generatePath('depthFirstSearch', settings.start, settings.finish);
 
         elements.solveButton.removeAttribute('disabled');
     }
 
     function solve() {
-        stopSolving = maze.solve(settings.start, settings.finish);
+        maze.solve(settings.start, settings.finish);
     }
 
     function updateFinish() {

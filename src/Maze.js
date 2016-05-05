@@ -1,7 +1,6 @@
 // TODO: implement weakmaps
 const PATH = 0;
 const WALL = 1;
-const VISITED = 2;
 
 const Algorithms = require('./Algorithms.js');
 
@@ -27,51 +26,30 @@ module.exports = class {
         this._element = element;
         this._canvas = element.getContext('2d');
 
-        this.tiles = new Array(tiles).fill(WALL);
+        this._tiles = new Array(tiles).fill(WALL);
+        this._path = [];
     }
 
-    // TODO: move draw methods to new class
-    drawMaze(path) {
-        let maze = this.tiles;
+    applyPath() {
+        this._path.forEach((tile) => {
+            this._tiles[tile] = PATH;
+        });
+    }
 
-        if(path) {
-            path.forEach((tile) => {
-                maze[tile] = PATH;
-            });
-        }
-
+    drawMaze() {
         this._canvas.clearRect(0, 0, this._element.width, this._element.height);
 
-        maze.forEach((type, tile) => {
+        this._tiles.forEach((type, tile) => {
             // TODO: color map as private const
             let color = ['white', 'black'][type];
             this.drawTile(tile, color);
         });
     }
 
-    drawSolution(steps, end) {
-        let path = [],
-            tile = end;
-
-        const drawTileLoop = (tile) => {
-            if(tile) {
-                this.drawTile(tile, 'red');
-                tile = path.shift();
-                this.drawTile(tile, 'red');
-                tile = path.shift();
-
-                setTimeout(() => {
-                    drawTileLoop(tile);
-                }, 3);
-            }
-        };
-
-        /*jshint boss:true */
-        do {
-            path.push(tile);
-        } while (tile = steps[tile]);
-
-        drawTileLoop(path.shift());
+    drawPath(path, color) {
+        path.forEach((tile) => {
+            this.drawTile(tile, color);
+        });
     }
 
     drawTile(tile, color) {
@@ -90,11 +68,13 @@ module.exports = class {
         // Prefill path with start and finish
         let direction = this.getAllowedDirections(start)[0];
         let firstRoom = this.getNextTile(start, direction);
-        let path = [start, firstRoom, end];
+        let initialPath = [start, firstRoom, end];
 
-        path = Algorithms[algorithm](this, firstRoom, path);
+        this._path = Algorithms[algorithm](this, firstRoom, initialPath);
 
-        return path;
+        this.drawMaze();
+        this.drawPath(this._path, 'white');
+        this.applyPath();
     }
 
     getAllowedDirections(tile, step = 1) {
@@ -105,7 +85,7 @@ module.exports = class {
             for(let i = 0; i < step; i++) {
                 nextRoom = this.getNextTile(nextRoom, direction);
 
-                if(this.isIntersection(nextRoom) || nextRoom > this.tiles.length) {
+                if(this.isIntersection(nextRoom) || nextRoom > this._tiles.length) {
                     return false;
                 }
             }
@@ -153,67 +133,25 @@ module.exports = class {
                 this.getColumn(tile) > this._columns - 1;
     }
 
-    isWall(tile) {
-        return this.getRow(tile) % 2 === 0 || this.getColumn(tile) % 2 === 0;
-    }
-
-    setTile(tile, type) {
-        this.tiles[tile] = type;
-    }
-
     solve(start, end) {
-        let steps = {},
-            queue = [start],
-            stopped = false;
+        let steps = Algorithms.solve(this, start, end);
+        let visited = Object.keys(steps);
 
-        this._resetSolution();
+        let solution = [];
+        let tile = end;
 
-        // TODO: find a better fix for private/inner functions
-        const markVisited = (tile, previous) => {
-                steps[tile] = previous;
+        /*jshint boss:true */
+        do {
+            solution.push(tile);
+        } while (tile = steps[tile]);
 
-                this.setTile(tile, VISITED);
-                this.drawTile(tile, '#FF9999');
-            },
-            solveNextTile = (current, direction) => {
-                let tile = this.getNextTile(current, direction);
-
-                markVisited(tile, current);
-
-                if(tile === end) {
-                    queue = [];
-                } else {
-                    queue.push(tile);
-                }
-            },
-            solveLoop = (tile) => {
-                if (tile && !stopped) {
-                    let directions = this.getAllowedDirections(tile, PATH) || [];
-
-                    directions.forEach((direction) => {
-                        solveNextTile(tile, direction);
-                    });
-
-                    setTimeout(() => {
-                        solveLoop(queue.shift());
-                    }, 5);
-                } else {
-                    this.drawSolution(steps, end);
-                }
-            };
-
-        markVisited(start);
-
-        solveLoop(queue.shift());
-
-        return function stopSolving() {
-            stopped = true;
-        };
+        this.drawPath(visited, '#f99');
+        this.drawPath(solution, 'red');
     }
 
     _logMaze(path) {
         let output = '',
-            maze = this.tiles;
+            maze = this._tiles;
 
         if(path) {
             path.forEach((tile) => {
@@ -230,13 +168,5 @@ module.exports = class {
         });
 
         console.log(output);
-    }
-
-    _resetSolution() {
-        this.tiles = this.tiles.map((tile) => {
-            return tile !== WALL ? PATH : WALL;
-        });
-
-        this.drawMaze();
     }
 };

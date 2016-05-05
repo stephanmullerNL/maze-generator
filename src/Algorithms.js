@@ -35,6 +35,41 @@ class Algorithms {
         return path;
     }
 
+    solve(maze, start, end) {
+        let queue = [start];
+        let steps = {};
+        let tile;
+
+        const getTile = (direction) => maze.getNextTile(tile, direction);
+        const unvisitedTiles = (tile) => {
+            let visited = Object.keys(steps);
+            return visited.indexOf(tile) === -1 && maze._path.indexOf(tile) > -1;
+        };
+
+        const visitNext = (nextTile) => {
+            steps[nextTile] = tile;
+
+            if(nextTile === end) {
+                queue = [];
+            } else {
+                queue.push(nextTile);
+            }
+        };
+
+        // Mark starting point
+        steps[start] = null;
+
+        while((tile = queue.shift()) && maze.tiles.length--) {
+            let directions = maze.getAllowedDirections(tile);
+
+            directions = directions.map(getTile);
+            directions = directions.filter(unvisitedTiles)
+            directions.forEach(visitNext);
+        }
+
+        return steps;
+    }
+
     // TODO: Add option for horizontal/vertical bias
     getRandom(array) {
         let rnd = Math.floor(Math.random() * array.length);
