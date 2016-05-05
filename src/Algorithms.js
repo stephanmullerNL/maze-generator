@@ -46,12 +46,7 @@ module.exports = class {
         let tile;
 
         const getTile = (direction) => this._maze.getNextTile(tile, direction);
-        const unvisitedTiles = (tile) => {
-            let notVisited = visited.indexOf(tile) === -1;
-            let inMaze = this._maze._path.indexOf(tile) > -1;
-
-            return notVisited && inMaze;
-        };
+        const unvisitedTiles = (tile) => visited.indexOf(tile) === -1 && this._maze.path.indexOf(tile) > -1;
 
         const visitNext = (nextTile) => {
             steps[nextTile] = tile;

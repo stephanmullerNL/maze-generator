@@ -5,8 +5,8 @@ const WALL = 1;
 const Algorithms = require('./Algorithms.js');
 const Draw = require('./Draw.js');
 
-let algorithms,
-    mazeDrawer;
+let algorithms;
+let mazeDrawer;
 
 module.exports = class {
 
@@ -17,21 +17,21 @@ module.exports = class {
         this.wallSize = Math.ceil(40 / maxDimension);
         this.roomSize = Math.floor((element.width - ((maxDimension + 1) * this.wallSize)) / maxDimension);
 
-        this._columns = width * 2 + 1;
-        this._rows = height * 2 + 1;
+        this.columns = width * 2 + 1;
+        this.rows = height * 2 + 1;
         
         this._DIRECTIONS = {
             left: -1,
             right: 1,
-            up: -this._columns,
-            down: this._columns
+            up: -this.columns,
+            down: this.columns
         };
         
-        this._element = element;
-        this._canvas = element.getContext('2d');
+        this.element = element;
+        this.canvas = element.getContext('2d');
 
-        this._tiles = new Array(tiles).fill(WALL);
-        this._path = [];
+        this.tiles = new Array(tiles).fill(WALL);
+        this.path = [];
 
         algorithms = new Algorithms(this);
         mazeDrawer = new Draw(this);
@@ -39,7 +39,7 @@ module.exports = class {
 
     applyPath(path) {
         path.forEach((tile) => {
-            this._tiles[tile] = PATH;
+            this.tiles[tile] = PATH;
         });
     }
 
@@ -55,7 +55,7 @@ module.exports = class {
         mazeDrawer.drawPath(path, 'white');
 
         this.applyPath(path);
-        this._path = path;
+        this.path = path;
     }
 
     getAllowedDirections(tile, step = 1) {
@@ -66,7 +66,7 @@ module.exports = class {
             for(let i = 0; i < step; i++) {
                 nextRoom = this.getNextTile(nextRoom, direction);
 
-                if(this.isIntersection(nextRoom) || nextRoom > this._tiles.length) {
+                if(this.isIntersection(nextRoom) || nextRoom > this.tiles.length) {
                     return false;
                 }
             }
@@ -76,7 +76,7 @@ module.exports = class {
     }
 
     getColumn(tile) {
-        return Math.floor(tile % this._columns);
+        return Math.floor(tile % this.columns);
     }
 
     getNextTile(tile, direction) {
@@ -96,7 +96,7 @@ module.exports = class {
     }
 
     getRow(tile) {
-        return Math.floor((tile) / this._columns);
+        return Math.floor((tile) / this.columns);
     }
 
     isAdjacent(tile, next) {
@@ -110,8 +110,8 @@ module.exports = class {
     isEdge(tile) {
         return  this.getRow(tile) < 1 ||
                 this.getColumn(tile) < 1 ||
-                this.getRow(tile) > this._rows - 1 ||
-                this.getColumn(tile) > this._columns - 1;
+                this.getRow(tile) > this.rows - 1 ||
+                this.getColumn(tile) > this.columns - 1;
     }
 
     solve(start, end) {
@@ -132,7 +132,7 @@ module.exports = class {
 
     _logMaze(path) {
         let output = '',
-            maze = this._tiles;
+            maze = this.tiles;
 
         if(path) {
             path.forEach((tile) => {
@@ -143,7 +143,7 @@ module.exports = class {
         maze.forEach((tile, i) => {
             output += tile;
 
-            if((i + 1) % this._columns === 0) {
+            if((i + 1) % this.columns === 0) {
                 output += '\n';
             }
         });

@@ -7,9 +7,9 @@ module.exports = class {
     }
 
     drawMaze() {
-        this._maze._canvas.clearRect(0, 0, this._maze._element.width, this._maze._element.height);
+        this._maze.canvas.clearRect(0, 0, this._maze.element.width, this._maze.element.height);
 
-        this._maze._tiles.forEach((type, tile) => {
+        this._maze.tiles.forEach((type, tile) => {
             // TODO: color map as private const
             let color = ['white', 'black'][type];
             this.drawTile(tile, color);
@@ -45,7 +45,7 @@ module.exports = class {
             width  = (col % 2) ? this._maze.roomSize : this._maze.wallSize,
             height = (row % 2) ? this._maze.roomSize : this._maze.wallSize;
 
-        this._maze._canvas.fillStyle = color;
-        this._maze._canvas.fillRect(x, y, width, height);
+        this._maze.canvas.fillStyle = color;
+        this._maze.canvas.fillRect(x, y, width, height);
     }
 };
