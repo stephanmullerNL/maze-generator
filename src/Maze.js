@@ -1,4 +1,3 @@
-// TODO: unit tests
 // TODO: implement weakmaps
 const PATH = 0;
 const WALL = 1;
@@ -31,6 +30,7 @@ module.exports = class {
         this.tiles = new Array(tiles).fill(WALL);
     }
 
+    // TODO: move draw methods to new class
     drawMaze(path) {
         let maze = this.tiles;
 
@@ -92,7 +92,7 @@ module.exports = class {
         let firstRoom = this.getNextTile(start, direction);
         let path = [start, firstRoom, end];
 
-        path = Algorithms[algorithm](this, path, firstRoom);
+        path = Algorithms[algorithm](this, firstRoom, path);
 
         return path;
     }

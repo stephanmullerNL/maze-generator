@@ -1,6 +1,6 @@
 class Algorithms {
 
-    depthFirstSearch(maze, path = [], from) {
+    depthFirstSearch(maze, from, path = []) {
         const getDirections = function(from) {
             let directions = maze.getAllowedDirections(from, 2).filter((direction) => {
                 let [wall, room] = maze.getNextTiles(from, direction, 2);
@@ -14,6 +14,7 @@ class Algorithms {
         const walk = (from) => {
             let allowedDirections;
 
+            /*jshint boss:true */
             while(allowedDirections = getDirections(from)) {
                 let nextDirection = this.getRandom(allowedDirections);
                 let [wall, room] = maze.getNextTiles(from, nextDirection, 2);

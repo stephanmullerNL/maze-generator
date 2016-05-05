@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 class Algorithms {
 
-    depthFirstSearch(maze, path = [], from) {
+    depthFirstSearch(maze, from, path = []) {
         const getDirections = function(from) {
             let directions = maze.getAllowedDirections(from, 2).filter((direction) => {
                 let [wall, room] = maze.getNextTiles(from, direction, 2);
@@ -15,6 +15,7 @@ class Algorithms {
         const walk = (from) => {
             let allowedDirections;
 
+            /*jshint boss:true */
             while(allowedDirections = getDirections(from)) {
                 let nextDirection = this.getRandom(allowedDirections);
                 let [wall, room] = maze.getNextTiles(from, nextDirection, 2);
@@ -44,7 +45,6 @@ class Algorithms {
 
 module.exports = new Algorithms();
 },{}],2:[function(require,module,exports){
-// TODO: unit tests
 // TODO: implement weakmaps
 const PATH = 0;
 const WALL = 1;
@@ -77,6 +77,7 @@ module.exports = class {
         this.tiles = new Array(tiles).fill(WALL);
     }
 
+    // TODO: move draw methods to new class
     drawMaze(path) {
         let maze = this.tiles;
 
@@ -138,7 +139,7 @@ module.exports = class {
         let firstRoom = this.getNextTile(start, direction);
         let path = [start, firstRoom, end];
 
-        path = Algorithms[algorithm](this, path, firstRoom);
+        path = Algorithms[algorithm](this, firstRoom, path);
 
         return path;
     }

@@ -25,14 +25,14 @@ var util         = require( 'gulp-util' );
 var chalk        = require( 'chalk' );
 
 var js = {
-    src:  'src/js/',
+    src:  'src/',
     main: 'main.js',
     dist: 'dist/'
 };
 
 var css = {
-    src: 'src/css/',
-    main: 'style.css',
+    src: 'src/',
+    main: 'maze.css',
     dist: 'dist/'
 };
 
