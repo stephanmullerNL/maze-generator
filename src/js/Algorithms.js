@@ -1,51 +1,43 @@
-const PATH = 0;
-const WALL = 1;
-
 class Algorithms {
 
-    depthFirstSearch(maze, from, direction) {
-        let path = [];
-        let x = 0;
+    depthFirstSearch(maze, path = [], from) {
+        const getDirections = function(from) {
+            let directions = maze.getAllowedDirections(from, 2).filter((direction) => {
+                let [wall, room] = maze.getNextTiles(from, direction, 2);
 
-        const getDirections = function(from, direction) {
-            let directions = maze.getAllowedDirections(from, WALL, 2).filter((direction) => {
-                let tile = maze.getNextTile(from, direction);
-                return path.indexOf(tile) === -1
+                return path.indexOf(room) === -1 && !maze.isEdge(wall);
             });
 
             return directions.length ? directions : null;
         };
 
-        const walk = function(from, direction) {
-            let allowedDirections,
-                lastStep,
-                wall = maze.isWall(from) ? from : maze.getNextTile(from, direction),
-                room = maze.getNextTile(wall, direction);
+        const walk = (from) => {
+            let allowedDirections;
 
-            path.push(wall);
-            path.push(room);
-            //maze.setTile(wall, PATH);
-            //maze.setTile(room, PATH);
+            while(allowedDirections = getDirections(from)) {
+                let nextDirection = this.getRandom(allowedDirections);
+                let [wall, room] = maze.getNextTiles(from, nextDirection, 2);
 
-            /*jshint boss:true */
-            while((allowedDirections = getDirections(room, direction)) && x++ < maze.tiles.length) {
-                // TODO: Add option for horizontal/vertical bias
-                let rnd = Math.floor(Math.random() * allowedDirections.length),
-                    nextDirection = allowedDirections[rnd];
+                path.push(wall);
+                path.push(room);
 
-                lastStep = walk(room, nextDirection);
+                walk(room);
             }
-
-            return lastStep || room;
         };
 
         try {
-            walk(from, direction);
+            walk(from);
         } catch (e) {
             alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
         }
 
         return path;
+    }
+
+    // TODO: Add option for horizontal/vertical bias
+    getRandom(array) {
+        let rnd = Math.floor(Math.random() * array.length);
+        return array[rnd];
     }
 }
 

@@ -36,8 +36,8 @@
         stopSolving = function() {};
 
     function init() {
-        elements.height.addEventListener('change', updateFinish);
-        elements.width.addEventListener('change', updateFinish);
+        elements.height.addEventListener('input', updateFinish);
+        elements.width.addEventListener('input', updateFinish);
 
         elements.generateButton.addEventListener('click', start);
         elements.solveButton.addEventListener('click', solve);

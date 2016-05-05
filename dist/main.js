@@ -1,52 +1,44 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-const PATH = 0;
-const WALL = 1;
-
 class Algorithms {
 
-    depthFirstSearch(maze, from, direction) {
-        let path = [];
-        let x = 0;
+    depthFirstSearch(maze, path = [], from) {
+        const getDirections = function(from) {
+            let directions = maze.getAllowedDirections(from, 2).filter((direction) => {
+                let [wall, room] = maze.getNextTiles(from, direction, 2);
 
-        const getDirections = function(from, direction) {
-            let directions = maze.getAllowedDirections(from, WALL, 2).filter((direction) => {
-                let tile = maze.getNextTile(from, direction);
-                return path.indexOf(tile) === -1
+                return path.indexOf(room) === -1 && !maze.isEdge(wall);
             });
 
             return directions.length ? directions : null;
         };
 
-        const walk = function(from, direction) {
-            let allowedDirections,
-                lastStep,
-                wall = maze.isWall(from) ? from : maze.getNextTile(from, direction),
-                room = maze.getNextTile(wall, direction);
+        const walk = (from) => {
+            let allowedDirections;
 
-            path.push(wall);
-            path.push(room);
-            //maze.setTile(wall, PATH);
-            //maze.setTile(room, PATH);
+            while(allowedDirections = getDirections(from)) {
+                let nextDirection = this.getRandom(allowedDirections);
+                let [wall, room] = maze.getNextTiles(from, nextDirection, 2);
 
-            /*jshint boss:true */
-            while((allowedDirections = getDirections(room, direction)) && x++ < maze.tiles.length) {
-                // TODO: Add option for horizontal/vertical bias
-                let rnd = Math.floor(Math.random() * allowedDirections.length),
-                    nextDirection = allowedDirections[rnd];
+                path.push(wall);
+                path.push(room);
 
-                lastStep = walk(room, nextDirection);
+                walk(room);
             }
-
-            return lastStep || room;
         };
 
         try {
-            walk(from, direction);
+            walk(from);
         } catch (e) {
             alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
         }
 
         return path;
+    }
+
+    // TODO: Add option for horizontal/vertical bias
+    getRandom(array) {
+        let rnd = Math.floor(Math.random() * array.length);
+        return array[rnd];
     }
 }
 
@@ -91,7 +83,7 @@ module.exports = class {
         if(path) {
             path.forEach((tile) => {
                 maze[tile] = PATH;
-            })
+            });
         }
 
         this._canvas.clearRect(0, 0, this._element.width, this._element.height);
@@ -141,42 +133,31 @@ module.exports = class {
     }
 
     generatePath(algorithm, start, end) {
+        // Prefill path with start and finish
+        let direction = this.getAllowedDirections(start)[0];
+        let firstRoom = this.getNextTile(start, direction);
+        let path = [start, firstRoom, end];
 
-        // TODO: move to separate file?
-        // TODO: implement variations (depth first, breadth first, stacked, recursive)
-        let direction = this.getAllowedDirections(start, WALL)[0];
-
-        let path = Algorithms[algorithm](this, start, direction);
-
-        path.push(end);
-
-        console.log(path);
+        path = Algorithms[algorithm](this, path, firstRoom);
 
         return path;
     }
 
-    getAllowedDirections(tile, allowedType, step = 1) {
-        let allowed = Object.keys(this._DIRECTIONS).filter((direction) => {
+    getAllowedDirections(tile, step = 1) {
+        return Object.keys(this._DIRECTIONS).filter((direction) => {
 
             let nextRoom = tile;
 
             for(let i = 0; i < step; i++) {
                 nextRoom = this.getNextTile(nextRoom, direction);
 
-                let type = this.getTileType(nextRoom),
-                    isAllowed = type === allowedType,
-                    isIntersection = this.isIntersection(nextRoom);
-
-                if(!isAllowed || isIntersection) {
+                if(this.isIntersection(nextRoom) || nextRoom > this.tiles.length) {
                     return false;
                 }
             }
 
             return true;
         });
-
-        // Return null instead of empty array so we can use the method in a while condition
-        return (allowed.length > 0) ? allowed : null;
     }
 
     getColumn(tile) {
@@ -189,12 +170,18 @@ module.exports = class {
         return this.isAdjacent(tile, next) ? next : null;
     }
 
-    getRow(tile) {
-        return Math.floor((tile) / this._columns);
+    getNextTiles(tile, direction, amount) {
+        let tiles = [];
+
+        while((tile = this.getNextTile(tile, direction)) && amount--) {
+            tiles.push(tile);
+        }
+
+        return tiles;
     }
 
-    getTileType(tile) {
-        return this.tiles[tile];
+    getRow(tile) {
+        return Math.floor((tile) / this._columns);
     }
 
     isAdjacent(tile, next) {
@@ -203,6 +190,13 @@ module.exports = class {
 
     isIntersection(tile) {
         return this.getRow(tile) % 2 === 0 && this.getColumn(tile) % 2 === 0;
+    }
+
+    isEdge(tile) {
+        return  this.getRow(tile) < 1 ||
+                this.getColumn(tile) < 1 ||
+                this.getRow(tile) > this._rows - 1 ||
+                this.getColumn(tile) > this._columns - 1;
     }
 
     isWall(tile) {
@@ -260,14 +254,20 @@ module.exports = class {
 
         return function stopSolving() {
             stopped = true;
-        }
+        };
     }
 
+    _logMaze(path) {
+        let output = '',
+            maze = this.tiles;
 
-    _logMaze() {
-        let output = '';
+        if(path) {
+            path.forEach((tile) => {
+                maze[tile] = PATH;
+            });
+        }
 
-        this.tiles.forEach((tile, i) => {
+        maze.forEach((tile, i) => {
             output += tile;
 
             if((i + 1) % this._columns === 0) {
@@ -325,8 +325,8 @@ module.exports = class {
         stopSolving = function() {};
 
     function init() {
-        elements.height.addEventListener('change', updateFinish);
-        elements.width.addEventListener('change', updateFinish);
+        elements.height.addEventListener('input', updateFinish);
+        elements.width.addEventListener('input', updateFinish);
 
         elements.generateButton.addEventListener('click', start);
         elements.solveButton.addEventListener('click', solve);
