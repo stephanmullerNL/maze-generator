@@ -4,6 +4,8 @@ const WALL = 1;
 
 const Algorithms = require('./Algorithms.js');
 
+let algorithms;
+
 module.exports = class {
 
     constructor(element, width, height) {
@@ -28,6 +30,8 @@ module.exports = class {
 
         this._tiles = new Array(tiles).fill(WALL);
         this._path = [];
+
+        algorithms = new Algorithms(this);
     }
 
     applyPath() {
@@ -70,7 +74,7 @@ module.exports = class {
         let firstRoom = this.getNextTile(start, direction);
         let initialPath = [start, firstRoom, end];
 
-        this._path = Algorithms[algorithm](this, firstRoom, initialPath);
+        this._path = algorithms[algorithm](firstRoom, initialPath);
 
         this.drawMaze();
         this.drawPath(this._path, 'white');
@@ -134,7 +138,7 @@ module.exports = class {
     }
 
     solve(start, end) {
-        let steps = Algorithms.solve(this, start, end);
+        let steps = algorithms.solve(start, end);
         let visited = Object.keys(steps);
 
         let solution = [];

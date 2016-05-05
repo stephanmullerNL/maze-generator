@@ -1,12 +1,16 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-class Algorithms {
+module.exports = class {
+    
+    constructor(maze) {
+        this._maze = maze;
+    }
 
-    depthFirstSearch(maze, from, path = []) {
-        const getDirections = function(from) {
-            let directions = maze.getAllowedDirections(from, 2).filter((direction) => {
-                let [wall, room] = maze.getNextTiles(from, direction, 2);
+    depthFirstSearch(from, path = []) {
+        const getDirections = (from) => {
+            let directions = this._maze.getAllowedDirections(from, 2).filter((direction) => {
+                let [wall, room] = this._maze.getNextTiles(from, direction, 2);
 
-                return path.indexOf(room) === -1 && !maze.isEdge(wall);
+                return path.indexOf(room) === -1 && !this._maze.isEdge(wall);
             });
 
             return directions.length ? directions : null;
@@ -18,7 +22,7 @@ class Algorithms {
             /*jshint boss:true */
             while(allowedDirections = getDirections(from)) {
                 let nextDirection = this.getRandom(allowedDirections);
-                let [wall, room] = maze.getNextTiles(from, nextDirection, 2);
+                let [wall, room] = this._maze.getNextTiles(from, nextDirection, 2);
 
                 path.push(wall);
                 path.push(room);
@@ -36,14 +40,14 @@ class Algorithms {
         return path;
     }
 
-    solve(maze, start, end) {
+    solve(start, end) {
         let queue = [start];
         let steps = {};
         let visited = [start];
         let tile;
 
-        const getTile = (direction) => maze.getNextTile(tile, direction);
-        const unvisitedTiles = (tile) => visited.indexOf(tile) === -1 && maze._path.indexOf(tile) > -1;
+        const getTile = (direction) => this._maze.getNextTile(tile, direction);
+        const unvisitedTiles = (tile) => visited.indexOf(tile) === -1 && this._maze._path.indexOf(tile) > -1;
 
         const visitNext = (nextTile) => {
             steps[nextTile] = tile;
@@ -59,8 +63,9 @@ class Algorithms {
         // Mark starting point
         steps[start] = null;
 
+        /*jshint boss:true */
         while(tile = queue.shift()) {
-            maze.getAllowedDirections(tile)
+            this._maze.getAllowedDirections(tile)
                 .map(getTile)
                 .filter(unvisitedTiles)
                 .forEach(visitNext);
@@ -74,15 +79,15 @@ class Algorithms {
         let rnd = Math.floor(Math.random() * array.length);
         return array[rnd];
     }
-}
-
-module.exports = new Algorithms();
+};
 },{}],2:[function(require,module,exports){
 // TODO: implement weakmaps
 const PATH = 0;
 const WALL = 1;
 
 const Algorithms = require('./Algorithms.js');
+
+let algorithms;
 
 module.exports = class {
 
@@ -108,6 +113,8 @@ module.exports = class {
 
         this._tiles = new Array(tiles).fill(WALL);
         this._path = [];
+
+        algorithms = new Algorithms(this);
     }
 
     applyPath() {
@@ -150,7 +157,7 @@ module.exports = class {
         let firstRoom = this.getNextTile(start, direction);
         let initialPath = [start, firstRoom, end];
 
-        this._path = Algorithms[algorithm](this, firstRoom, initialPath);
+        this._path = algorithms[algorithm](firstRoom, initialPath);
 
         this.drawMaze();
         this.drawPath(this._path, 'white');
@@ -214,7 +221,7 @@ module.exports = class {
     }
 
     solve(start, end) {
-        let steps = Algorithms.solve(this, start, end);
+        let steps = algorithms.solve(start, end);
         let visited = Object.keys(steps);
 
         let solution = [];
