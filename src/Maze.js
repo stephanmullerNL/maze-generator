@@ -1,14 +1,11 @@
-// TODO: implement weakmaps
+const q = require('q');
+
+// TODO: implement weakmaps?
 const PATH = 0;
 const WALL = 1;
 
-const Creator = require('./Creator.js');
-const Draw = require('./Draw.js');
-const Path = require('./Path.js');
-
-let mazeCreator;
-let mazeDrawer;
 let pathGenerator;
+let directions;
 
 module.exports = class {
 
@@ -22,21 +19,20 @@ module.exports = class {
         this.tiles = this.createTiles(width, height);
         this.path = [];
 
-        mazeCreator = new Creator(this);
-        mazeDrawer = new Draw(this);
-        pathGenerator = new Path(this);
+        this._isDrawing = false;
 
-        mazeDrawer.drawMaze();
-    }
+        directions = {
+            left: -1,
+            right: 1,
+            up: -this.columns,
+            down: this.columns
+        };
 
-    applyPath(path) {
-        let tiles = this.tiles;
+        this.renderMaze();
 
-        path.forEach((tile) => {
-            tiles[tile].type = PATH;
-        });
-
-        return tiles;
+        element.addEventListener('mousedown', () => this.startDrawing());
+        element.addEventListener('mouseup', () => this.stopDrawing());
+        element.addEventListener('mousemove', (event) => this.drawPath(event));
     }
 
     createTiles(width, height) {
@@ -64,28 +60,237 @@ module.exports = class {
         return tiles;
     }
 
+
+    /*** Draw custom maze ***/
+    drawPath(event) {
+        if(this._isDrawing) {
+            const x = event.pageX - this.element.offsetLeft;
+            const y = event.pageY - this.element.offsetTop;
+
+            console.log(this.getTileFromCoordinates(x, y));
+        }
+    }
+
+    startDrawing() {
+        this._isDrawing = true;
+    }
+
+    stopDrawing() {
+        this._isDrawing = false;
+    }
+
+
+    /*** Generate maze path ***/
     generatePath(algorithm, start, end) {
-        let path = pathGenerator.generate(algorithm, start, end);
+        let path;
+        let direction = this.getAllowedDirections(start)[0];
+        let firstRoom = this.getNextTile(start, direction);
+        let initialPath = [start, firstRoom, end];
 
-        mazeDrawer.drawMaze();
-        mazeDrawer.drawPath(path, 'white');
+        this..path = this[algorithm](firstRoom, initialPath);
 
-        this.path = path;
-        this.tiles = this.applyPath(path);
+        this.renderMaze();
+        this.renderPath(this.path, 'white', 5);
+
+        //this.path = path;
+        this.tiles = this.applyPath(this.path);
+    }
+
+    depthFirstSearch(from, path = []) {
+        const getDirections = (from) => {
+            let directions = this.getAllowedDirections(from, 2).filter((direction) => {
+                let [wall, room] = this.getNextTiles(from, direction, 2);
+
+                return path.indexOf(room) === -1 && !this.isEdge(wall);
+            });
+
+            return directions.length ? directions : null;
+        };
+
+        const walk = (from) => {
+            let allowedDirections;
+
+            /*jshint boss:true */
+            while(allowedDirections = getDirections(from)) {
+                let nextDirection = this.getRandom(allowedDirections);
+                let [wall, room] = this.getNextTiles(from, nextDirection, 2);
+
+                path.push(wall);
+                path.push(room);
+
+                walk(room);
+            }
+        };
+
+        try {
+            walk(from);
+        } catch (e) {
+            alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
+        }
+
+        return path;
+    }
+
+    getAllowedDirections(tile, step = 1) {
+        return Object.keys(directions).filter((direction) => {
+
+            let nextRoom = tile;
+
+            for(let i = 0; i < step; i++) {
+                nextRoom = this.getNextTile(nextRoom, direction);
+
+                if(this.isIntersection(nextRoom) || nextRoom > this.tiles.length) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }
+
+    getNextTile(tile, direction) {
+        let next = tile + directions[direction];
+
+        return this.isAdjacent(tile, next) ? next : null;
+    }
+
+    getNextTiles(tile, direction, amount) {
+        let tiles = [];
+
+        while((tile = this.getNextTile(tile, direction)) && amount--) {
+            tiles.push(tile);
+        }
+
+        return tiles;
+    }
+
+    // TODO: Add option for horizontal/vertical bias
+    getRandom(array) {
+        let rnd = Math.floor(Math.random() * array.length);
+        return array[rnd];
+    }
+
+    /*** Render maze ***/
+    renderMaze() {
+        this.canvas.clearRect(0, 0, this.element.width, this.element.height);
+
+        this.tiles.forEach((tile, index) => {
+            // TODO: color map as private const
+            let color = ['white', 'black'][tile.type];
+
+            if(tile.type === WALL && !this.isWall(index)) {
+                color = '#444';
+            }
+
+            this.drawTile(tile, color);
+        });
+    }
+
+    renderPath(path, color, timeout) {
+        let deferred = q.defer();
+
+        path = [].concat(path);
+
+        const draw = () => {
+            const tileIndex = path.shift();
+            const tile = this.tiles[tileIndex];
+
+            if(tile === undefined) {
+                deferred.resolve();
+            } else {
+                this.drawTile(tile, color);
+                setTimeout(draw, timeout);
+            }
+        };
+
+        draw();
+
+        return deferred.promise;
+    }
+
+    drawTile(tile, color) {
+        this.canvas.fillStyle = color;
+        this.canvas.fillRect(tile.x, tile.y, tile.width, tile.height);
+    }
+
+    /*** Solve maze ***/
+    solve(start, end) {
+        const [visited, steps] = this.breadthFirstSearch(start, end);
+
+        let solution = [];
+        let tile = end;
+
+        /*jshint boss:true */
+        do {
+            solution.push(tile);
+        } while (tile = steps[tile]);
+
+        return this.renderPath(visited, '#f99', 5).then(() =>{
+            return this.renderPath(solution, 'red', 10);
+        });
+    }
+
+
+    breadthFirstSearch(start, end) {
+        let queue = [start];
+        let steps = {};
+        let visited = [start];
+        let tile;
+
+        const getTile = (direction) => this.getNextTile(tile, direction);
+        const unvisitedTiles = (tile) => visited.indexOf(tile) === -1 && this.path.indexOf(tile) > -1;
+
+        const visitNext = (nextTile) => {
+            steps[nextTile] = tile;
+            visited.push(nextTile);
+
+            if(nextTile === end) {
+                queue = [];
+            } else {
+                queue.push(nextTile);
+            }
+        };
+
+        // Mark starting point
+        steps[start] = null;
+
+        /*jshint boss:true */
+        while(tile = queue.shift()) {
+            this.getAllowedDirections(tile)
+                .map(getTile)
+                .filter(unvisitedTiles)
+                .forEach(visitNext);
+        }
+
+        return [visited, steps];
+    }
+
+    /*** Helpers ***/
+    applyPath(path) {
+        let tiles = this.tiles;
+
+        path.forEach((tile) => {
+            tiles[tile].type = PATH;
+        });
+
+        return tiles;
     }
 
     getColumn(tile) {
         return Math.floor(tile % this.columns);
     }
 
-    getTileFromCoordinates(x, y) {
-        return this.tiles.find((tile) => {
-            return tile.x <= x && tile.y <= y && tile.x + tile.width >= x && tile.y + tile.height >= y;
-        });
-    }
-
     getRow(tile) {
         return Math.floor((tile) / this.columns);
+    }
+
+    getTileFromCoordinates(x, y) {
+        return this.tiles.find((tile) => {
+            return tile.x <= x &&
+                    tile.y <= y &&
+                    tile.x + tile.width >= x &&
+                    tile.y + tile.height >= y;
+        });
     }
 
     isAdjacent(tile, next) {
@@ -103,22 +308,12 @@ module.exports = class {
                 this.getColumn(tile) > this.columns - 1;
     }
 
-    solve(start, end) {
-        const [visited, steps] = pathGenerator.solve(start, end);
-
-        let solution = [];
-        let tile = end;
-
-        /*jshint boss:true */
-        do {
-            solution.push(tile);
-        } while (tile = steps[tile]);
-
-        return mazeDrawer.drawPath(visited, '#f99').then(() =>{
-            return mazeDrawer.drawPath(solution, 'red');
-        });
+    isWall(tile) {
+        return this.getColumn(tile) % 2 === 0 || this.getRow(tile) % 2 === 0;
     }
 
+
+    /*** Debug ***/
     _logMaze(path = []) {
         let maze = this.applyPath(path);
         let output = '';
