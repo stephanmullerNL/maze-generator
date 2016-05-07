@@ -2144,6 +2144,39 @@ return Q;
 
 }).call(this,require('_process'))
 },{"_process":1}],3:[function(require,module,exports){
+module.exports = class {
+
+    constructor(maze) {
+        this._maze = maze;
+
+        this.stopDrawing();
+
+        maze.element.addEventListener('mousedown', () => this.startDrawing());
+        maze.element.addEventListener('mouseup', () => this.stopDrawing());
+        maze.element.addEventListener('mousemove', (event) => {
+            if(this._isDrawing) {
+                this.drawTile(event);
+            }
+        });
+    }
+
+    drawTile(event) {
+        const x = event.pageX - this._maze.element.offsetLeft;
+        const y = event.pageY - this._maze.element.offsetTop;
+
+        console.log(this._maze.getTileFromCoordinates(x, y));
+    }
+
+    startDrawing() {
+        this._isDrawing = true;
+    }
+
+    stopDrawing() {
+        this._isDrawing = false;
+    }
+
+};
+},{}],4:[function(require,module,exports){
 const q = require('q');
 
 module.exports = class {
@@ -2155,9 +2188,9 @@ module.exports = class {
     drawMaze() {
         this._maze.canvas.clearRect(0, 0, this._maze.element.width, this._maze.element.height);
 
-        this._maze.tiles.forEach((type, tile) => {
+        this._maze.tiles.forEach((tile) => {
             // TODO: color map as private const
-            let color = ['white', 'black'][type];
+            let color = ['white', 'black'][tile.type];
             this.drawTile(tile, color);
         });
     }
@@ -2168,7 +2201,8 @@ module.exports = class {
         path = [].concat(path);
 
         const draw = () => {
-            let tile = path.shift();
+            const tileIndex = path.shift();
+            const tile = this._maze.tiles[tileIndex];
 
             if(tile === undefined) {
                 deferred.resolve();
@@ -2184,54 +2218,75 @@ module.exports = class {
     }
 
     drawTile(tile, color) {
-        const col = this._maze.getColumn(tile),
-            row = this._maze.getRow(tile),
-            x = (Math.ceil(col / 2) * this._maze.wallSize) + (Math.ceil(col / 2) - col % 2) * this._maze.roomSize,
-            y = (Math.ceil(row / 2) * this._maze.wallSize) + (Math.ceil(row / 2) - row % 2) * this._maze.roomSize,
-            width  = (col % 2) ? this._maze.roomSize : this._maze.wallSize,
-            height = (row % 2) ? this._maze.roomSize : this._maze.wallSize;
-
         this._maze.canvas.fillStyle = color;
-        this._maze.canvas.fillRect(x, y, width, height);
+        this._maze.canvas.fillRect(tile.x, tile.y, tile.width, tile.height);
     }
 };
-},{"q":2}],4:[function(require,module,exports){
+},{"q":2}],5:[function(require,module,exports){
 // TODO: implement weakmaps
 const PATH = 0;
 const WALL = 1;
 
-const Path = require('./Path.js');
+const Creator = require('./Creator.js');
 const Draw = require('./Draw.js');
+const Path = require('./Path.js');
 
-let pathGenerator;
+let mazeCreator;
 let mazeDrawer;
+let pathGenerator;
 
 module.exports = class {
 
     constructor(element, width, height) {
-        const tiles = (width * 2 + 1) * (height * 2 + 1);
-        const maxDimension = Math.max(width, height);
-
-        this.wallSize = Math.ceil(40 / maxDimension);
-        this.roomSize = Math.floor((element.width - ((maxDimension + 1) * this.wallSize)) / maxDimension);
-
         this.columns = width * 2 + 1;
         this.rows = height * 2 + 1;
         
         this.element = element;
         this.canvas = element.getContext('2d');
 
-        this.tiles = new Array(tiles).fill(WALL);
+        this.tiles = this.createTiles(width, height);
         this.path = [];
 
-        pathGenerator = new Path(this);
+        mazeCreator = new Creator(this);
         mazeDrawer = new Draw(this);
+        pathGenerator = new Path(this);
+
+        mazeDrawer.drawMaze();
     }
 
     applyPath(path) {
+        let tiles = this.tiles;
+
         path.forEach((tile) => {
-            this.tiles[tile] = PATH;
+            tiles[tile].type = PATH;
         });
+
+        return tiles;
+    }
+
+    createTiles(width, height) {
+        let tiles = [];
+
+        const amount = (width * 2 + 1) * (height * 2 + 1);
+        const maxDimension = Math.max(width, height);
+
+        const wallSize = Math.ceil(40 / maxDimension);
+        const roomSize = Math.floor((this.element.width - ((maxDimension + 1) * wallSize)) / maxDimension);
+
+        for(let i = 0; i < amount; i++) {
+            const col = this.getColumn(i);
+            const row = this.getRow(i);
+
+            tiles.push({
+                type: WALL,
+                x: (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
+                y: (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
+                width: (col % 2) ? roomSize : wallSize,
+                height: (row % 2) ? roomSize : wallSize
+            });
+        }
+
+        return tiles;
     }
 
     generatePath(algorithm, start, end) {
@@ -2240,12 +2295,18 @@ module.exports = class {
         mazeDrawer.drawMaze();
         mazeDrawer.drawPath(path, 'white');
 
-        this.applyPath(path);
         this.path = path;
+        this.tiles = this.applyPath(path);
     }
 
     getColumn(tile) {
         return Math.floor(tile % this.columns);
+    }
+
+    getTileFromCoordinates(x, y) {
+        return this.tiles.find((tile) => {
+            return tile.x <= x && tile.y <= y && tile.x + tile.width >= x && tile.y + tile.height >= y;
+        });
     }
 
     getRow(tile) {
@@ -2279,22 +2340,16 @@ module.exports = class {
         } while (tile = steps[tile]);
 
         return mazeDrawer.drawPath(visited, '#f99').then(() =>{
-            return mazeDrawer.drawPath(solution, 'red')
+            return mazeDrawer.drawPath(solution, 'red');
         });
     }
 
-    _logMaze(path) {
-        let output = '',
-            maze = this.tiles;
-
-        if(path) {
-            path.forEach((tile) => {
-                maze[tile] = PATH;
-            });
-        }
+    _logMaze(path = []) {
+        let maze = this.applyPath(path);
+        let output = '';
 
         maze.forEach((tile, i) => {
-            output += tile;
+            output += tile.type;
 
             if((i + 1) % this.columns === 0) {
                 output += '\n';
@@ -2304,7 +2359,7 @@ module.exports = class {
         console.log(output);
     }
 };
-},{"./Draw.js":3,"./Path.js":5}],5:[function(require,module,exports){
+},{"./Creator.js":3,"./Draw.js":4,"./Path.js":6}],6:[function(require,module,exports){
 module.exports = class {
     
     constructor(maze) {
@@ -2435,7 +2490,7 @@ module.exports = class {
         return array[rnd];
     }
 };
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 (function () {
 
     const Maze = require('./Maze.js');
@@ -2448,15 +2503,16 @@ module.exports = class {
         start: document.getElementById('start'),
         finish: document.getElementById('finish'),
 
+        createButton:  document.getElementById('create'),
         generateButton:  document.getElementById('generate'),
 
         // Solve
         solveButton: document.getElementById('solve')
     };
 
-    let settings = {
+    const settings = {
             get height() {
-               return parseInt(elements.height.value) || 50;
+                return parseInt(elements.height.value) || 50;
             },
             get width() {
                 return parseInt(elements.width.value) || 50;
@@ -2469,22 +2525,23 @@ module.exports = class {
                 // TODO: let user pick end point after generating
                 return parseInt(elements.finish.value) || 10199;
             }
-        },
-        maze,
-        stopSolving = function() {};
+        };
+    let maze;
 
     function init() {
         elements.height.addEventListener('input', updateFinish);
         elements.width.addEventListener('input', updateFinish);
 
-        elements.generateButton.addEventListener('click', start);
+        elements.createButton.addEventListener('click', start);
+        elements.generateButton.addEventListener('click', generate);
         elements.solveButton.addEventListener('click', solve);
     }
 
     function start() {
-        stopSolving();
         maze = new Maze(elements.maze, settings.width, settings.height);
+    }
 
+    function generate() {
         maze.generatePath('depthFirstSearch', settings.start, settings.finish);
 
         elements.solveButton.removeAttribute('disabled');
@@ -2504,4 +2561,4 @@ module.exports = class {
 
     init();
 }());
-},{"./Maze.js":4}]},{},[6]);
+},{"./Maze.js":5}]},{},[7]);

@@ -9,9 +9,9 @@ module.exports = class {
     drawMaze() {
         this._maze.canvas.clearRect(0, 0, this._maze.element.width, this._maze.element.height);
 
-        this._maze.tiles.forEach((type, tile) => {
+        this._maze.tiles.forEach((tile) => {
             // TODO: color map as private const
-            let color = ['white', 'black'][type];
+            let color = ['white', 'black'][tile.type];
             this.drawTile(tile, color);
         });
     }
@@ -22,7 +22,8 @@ module.exports = class {
         path = [].concat(path);
 
         const draw = () => {
-            let tile = path.shift();
+            const tileIndex = path.shift();
+            const tile = this._maze.tiles[tileIndex];
 
             if(tile === undefined) {
                 deferred.resolve();
@@ -38,14 +39,7 @@ module.exports = class {
     }
 
     drawTile(tile, color) {
-        const col = this._maze.getColumn(tile),
-            row = this._maze.getRow(tile),
-            x = (Math.ceil(col / 2) * this._maze.wallSize) + (Math.ceil(col / 2) - col % 2) * this._maze.roomSize,
-            y = (Math.ceil(row / 2) * this._maze.wallSize) + (Math.ceil(row / 2) - row % 2) * this._maze.roomSize,
-            width  = (col % 2) ? this._maze.roomSize : this._maze.wallSize,
-            height = (row % 2) ? this._maze.roomSize : this._maze.wallSize;
-
         this._maze.canvas.fillStyle = color;
-        this._maze.canvas.fillRect(x, y, width, height);
+        this._maze.canvas.fillRect(tile.x, tile.y, tile.width, tile.height);
     }
 };

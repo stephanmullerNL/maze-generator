@@ -10,15 +10,16 @@
         start: document.getElementById('start'),
         finish: document.getElementById('finish'),
 
+        createButton:  document.getElementById('create'),
         generateButton:  document.getElementById('generate'),
 
         // Solve
         solveButton: document.getElementById('solve')
     };
 
-    let settings = {
+    const settings = {
             get height() {
-               return parseInt(elements.height.value) || 50;
+                return parseInt(elements.height.value) || 50;
             },
             get width() {
                 return parseInt(elements.width.value) || 50;
@@ -31,22 +32,23 @@
                 // TODO: let user pick end point after generating
                 return parseInt(elements.finish.value) || 10199;
             }
-        },
-        maze,
-        stopSolving = function() {};
+        };
+    let maze;
 
     function init() {
         elements.height.addEventListener('input', updateFinish);
         elements.width.addEventListener('input', updateFinish);
 
-        elements.generateButton.addEventListener('click', start);
+        elements.createButton.addEventListener('click', start);
+        elements.generateButton.addEventListener('click', generate);
         elements.solveButton.addEventListener('click', solve);
     }
 
     function start() {
-        stopSolving();
         maze = new Maze(elements.maze, settings.width, settings.height);
+    }
 
+    function generate() {
         maze.generatePath('depthFirstSearch', settings.start, settings.finish);
 
         elements.solveButton.removeAttribute('disabled');

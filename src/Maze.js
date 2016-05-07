@@ -2,38 +2,63 @@
 const PATH = 0;
 const WALL = 1;
 
-const Path = require('./Path.js');
 const Draw = require('./Draw.js');
+const Path = require('./Path.js');
 
-let pathGenerator;
 let mazeDrawer;
+let pathGenerator;
 
 module.exports = class {
 
     constructor(element, width, height) {
-        const tiles = (width * 2 + 1) * (height * 2 + 1);
-        const maxDimension = Math.max(width, height);
-
-        this.wallSize = Math.ceil(40 / maxDimension);
-        this.roomSize = Math.floor((element.width - ((maxDimension + 1) * this.wallSize)) / maxDimension);
-
         this.columns = width * 2 + 1;
         this.rows = height * 2 + 1;
         
         this.element = element;
         this.canvas = element.getContext('2d');
 
-        this.tiles = new Array(tiles).fill(WALL);
+        this.tiles = this.createTiles(width, height);
         this.path = [];
 
-        pathGenerator = new Path(this);
         mazeDrawer = new Draw(this);
+        pathGenerator = new Path(this);
+
+        mazeDrawer.drawMaze();
     }
 
     applyPath(path) {
+        let tiles = this.tiles;
+
         path.forEach((tile) => {
-            this.tiles[tile] = PATH;
+            tiles[tile].type = PATH;
         });
+
+        return tiles;
+    }
+
+    createTiles(width, height) {
+        let tiles = [];
+
+        const amount = (width * 2 + 1) * (height * 2 + 1);
+        const maxDimension = Math.max(width, height);
+
+        const wallSize = Math.ceil(40 / maxDimension);
+        const roomSize = Math.floor((this.element.width - ((maxDimension + 1) * wallSize)) / maxDimension);
+
+        for(let i = 0; i < amount; i++) {
+            const col = this.getColumn(i);
+            const row = this.getRow(i);
+
+            tiles.push({
+                type: WALL,
+                x: (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
+                y: (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
+                width: (col % 2) ? roomSize : wallSize,
+                height: (row % 2) ? roomSize : wallSize
+            });
+        }
+
+        return tiles;
     }
 
     generatePath(algorithm, start, end) {
@@ -42,8 +67,8 @@ module.exports = class {
         mazeDrawer.drawMaze();
         mazeDrawer.drawPath(path, 'white');
 
-        this.applyPath(path);
         this.path = path;
+        this.tiles = this.applyPath(path);
     }
 
     getColumn(tile) {
@@ -81,22 +106,16 @@ module.exports = class {
         } while (tile = steps[tile]);
 
         return mazeDrawer.drawPath(visited, '#f99').then(() =>{
-            return mazeDrawer.drawPath(solution, 'red')
+            return mazeDrawer.drawPath(solution, 'red');
         });
     }
 
-    _logMaze(path) {
-        let output = '',
-            maze = this.tiles;
-
-        if(path) {
-            path.forEach((tile) => {
-                maze[tile] = PATH;
-            });
-        }
+    _logMaze(path = []) {
+        let maze = this.applyPath(path);
+        let output = '';
 
         maze.forEach((tile, i) => {
-            output += tile;
+            output += tile.type;
 
             if((i + 1) % this.columns === 0) {
                 output += '\n';
