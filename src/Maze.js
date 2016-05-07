@@ -4,22 +4,22 @@ const q = require('q');
 const PATH = 0;
 const WALL = 1;
 
-let pathGenerator;
 let directions;
 
 module.exports = class {
 
     constructor(element, width, height) {
-        this.columns = width * 2 + 1;
-        this.rows = height * 2 + 1;
-
         this.element = element;
         this.canvas = element.getContext('2d');
+
+        this.columns = width * 2 + 1;
+        this.rows = height * 2 + 1;
 
         this.tiles = this.createTiles(width, height);
         this.path = [];
 
-        this._isDrawing = false;
+        this.customPath = [];
+        this._drawType = null;
 
         directions = {
             left: -1,
@@ -30,9 +30,10 @@ module.exports = class {
 
         this.renderMaze();
 
-        element.addEventListener('mousedown', () => this.startDrawing());
-        element.addEventListener('mouseup', () => this.stopDrawing());
+        element.addEventListener('mousedown', (event) => this.startDrawing(event));
+        element.addEventListener('mouseup', (event) => this.stopDrawing(event));
         element.addEventListener('mousemove', (event) => this.drawPath(event));
+        element.addEventListener('contextmenu', (event) => event.preventDefault());
     }
 
     createTiles(width, height) {
@@ -63,31 +64,44 @@ module.exports = class {
 
     /*** Draw custom maze ***/
     drawPath(event) {
-        if(this._isDrawing) {
+        if(this._drawType !== null) {
             const x = event.pageX - this.element.offsetLeft;
             const y = event.pageY - this.element.offsetTop;
 
-            console.log(this.getTileFromCoordinates(x, y));
+            let tile = this.getTileFromCoordinates(x, y);
+            let tileIndex = this.tiles.indexOf(tile);
+            let color = ['white', 'black'][this._drawType];
+
+            console.log(tileIndex, tile);
+
+            if(this.customPath.indexOf(tileIndex) === -1) {
+                this.drawTile(tile, color);
+                this.customPath.push(tileIndex);
+            }
         }
     }
 
     startDrawing() {
-        this._isDrawing = true;
+        if(event.which === 3) {
+            event.preventDefault();
+            this._drawType = WALL;
+        } else {
+            this._drawType = PATH;
+        }
     }
 
     stopDrawing() {
-        this._isDrawing = false;
+        this._drawType = null;
     }
 
 
     /*** Generate maze path ***/
     generatePath(algorithm, start, end) {
-        let path;
         let direction = this.getAllowedDirections(start)[0];
         let firstRoom = this.getNextTile(start, direction);
-        let initialPath = [start, firstRoom, end];
+        let initialPath = [start, firstRoom, end].concat(this.customPath);
 
-        this..path = this[algorithm](firstRoom, initialPath);
+        this.path = this[algorithm](firstRoom, initialPath);
 
         this.renderMaze();
         this.renderPath(this.path, 'white', 5);
