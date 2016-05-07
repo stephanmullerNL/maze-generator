@@ -2,9 +2,11 @@
 const PATH = 0;
 const WALL = 1;
 
+const Creator = require('./Creator.js');
 const Draw = require('./Draw.js');
 const Path = require('./Path.js');
 
+let mazeCreator;
 let mazeDrawer;
 let pathGenerator;
 
@@ -20,6 +22,7 @@ module.exports = class {
         this.tiles = this.createTiles(width, height);
         this.path = [];
 
+        mazeCreator = new Creator(this);
         mazeDrawer = new Draw(this);
         pathGenerator = new Path(this);
 
@@ -73,6 +76,12 @@ module.exports = class {
 
     getColumn(tile) {
         return Math.floor(tile % this.columns);
+    }
+
+    getTileFromCoordinates(x, y) {
+        return this.tiles.find((tile) => {
+            return tile.x <= x && tile.y <= y && tile.x + tile.width >= x && tile.y + tile.height >= y;
+        });
     }
 
     getRow(tile) {
