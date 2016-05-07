@@ -2240,7 +2240,7 @@ module.exports = class {
     constructor(element, width, height) {
         this.columns = width * 2 + 1;
         this.rows = height * 2 + 1;
-        
+
         this.element = element;
         this.canvas = element.getContext('2d');
 
