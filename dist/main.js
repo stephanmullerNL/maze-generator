@@ -2145,12 +2145,14 @@ return Q;
 }).call(this,require('_process'))
 },{"_process":1}],3:[function(require,module,exports){
 const q = require('q');
+const Tile = require('./Tile.js');
 
 // TODO: implement weakmaps?
 const PATH = 0;
 const WALL = 1;
 
 let directions;
+let events;
 
 module.exports = class {
 
@@ -2174,12 +2176,14 @@ module.exports = class {
             down: this.columns
         };
 
-        this.renderMaze();
+        events = {
+            mousedown: (event) => this.onMouseDown(event),
+            mouseup: (event) => this.onMouseUp(event),
+            mousemove: (event) => this.onMouseMove(event),
+            contextmenu: (event) => event.preventDefault()
+        };
 
-        element.addEventListener('mousedown', (event) => this.startDrawing(event));
-        element.addEventListener('mouseup', (event) => this.stopDrawing(event));
-        element.addEventListener('mousemove', (event) => this.drawPath(event));
-        element.addEventListener('contextmenu', (event) => event.preventDefault());
+        this.renderMaze();
     }
 
     createTiles(width, height) {
@@ -2195,13 +2199,16 @@ module.exports = class {
             const col = this.getColumn(i);
             const row = this.getRow(i);
 
-            tiles.push({
-                type: WALL,
-                x: (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
-                y: (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
-                width: (col % 2) ? roomSize : wallSize,
-                height: (row % 2) ? roomSize : wallSize
-            });
+            const tile = new Tile(
+                this.canvas,
+                WALL,
+                (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
+                (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
+                (col % 2) ? roomSize : wallSize,
+                (row % 2) ? roomSize : wallSize
+            );
+
+            tiles.push(tile);
         }
 
         return tiles;
@@ -2209,25 +2216,58 @@ module.exports = class {
 
 
     /*** Draw custom maze ***/
-    drawPath(event) {
-        if(this._drawType !== null) {
-            const x = event.pageX - this.element.offsetLeft;
-            const y = event.pageY - this.element.offsetTop;
-
-            let tile = this.getTileFromCoordinates(x, y);
-            let tileIndex = this.tiles.indexOf(tile);
-            let color = ['white', 'black'][this._drawType];
-
-            console.log(tileIndex, tile);
-
-            if(this.customPath.indexOf(tileIndex) === -1) {
-                this.drawTile(tile, color);
-                this.customPath.push(tileIndex);
+    startDrawing() {
+        for(let event in events) {
+            if(events.hasOwnProperty(event)) {
+                this.element.addEventListener(event, events[event]);
             }
         }
     }
 
-    startDrawing() {
+    stopDrawing() {
+        for(let event in events) {
+            if(events.hasOwnProperty(event)) {
+                this.element.removeEventListener(event, events[event]);
+            }
+        }
+    }
+
+    onMouseMove(event) {
+        this._mouseX = event.pageX - this.element.offsetLeft;
+        this._mouseY = event.pageY - this.element.offsetTop;
+
+        this.drawTile()
+    }
+
+    drawTile() {
+        let tile = this.getTileFromCoordinates(this._mouseX, this._mouseY);
+        let tileIndex = this.tiles.indexOf(tile);
+        let pathIndex = this.customPath.indexOf(tileIndex);
+
+        if(this._highlighted) {
+            this._highlighted.reset();
+        }
+
+        // TODO: Refactor this shit
+        if(this._drawType !== null) {
+            if (pathIndex === -1) {
+                if(this._drawType === 0) {
+                    this.customPath.push(tileIndex);
+                } else {
+                    this.customPath = this.customPath.splice(pathIndex, 1);
+                }
+            } else if(this._drawType === 0) {
+                this.customPath[pathIndex] = tileIndex;
+            }
+
+            tile.setType(this._drawType);
+        } else {
+            this._highlighted = tile;
+            tile.highlight();
+        }
+    }
+
+    onMouseDown() {
         if(event.which === 3) {
             event.preventDefault();
             this._drawType = WALL;
@@ -2236,7 +2276,8 @@ module.exports = class {
         }
     }
 
-    stopDrawing() {
+    onMouseUp() {
+        this.drawTile();
         this._drawType = null;
     }
 
@@ -2251,9 +2292,6 @@ module.exports = class {
 
         this.renderMaze();
         this.renderPath(this.path, 'white', 5);
-
-        //this.path = path;
-        this.tiles = this.applyPath(this.path);
     }
 
     depthFirstSearch(from, path = []) {
@@ -2330,20 +2368,15 @@ module.exports = class {
         return array[rnd];
     }
 
+    resetGeneratedPath() {
+        this.renderMaze();
+        this.renderPath(this.customPath, 'white', 0);
+    }
+
     /*** Render maze ***/
     renderMaze() {
         this.canvas.clearRect(0, 0, this.element.width, this.element.height);
-
-        this.tiles.forEach((tile, index) => {
-            // TODO: color map as private const
-            let color = ['white', 'black'][tile.type];
-
-            if(tile.type === WALL && !this.isWall(index)) {
-                color = '#444';
-            }
-
-            this.drawTile(tile, color);
-        });
+        this.tiles.forEach((tile) => tile.draw());
     }
 
     renderPath(path, color, timeout) {
@@ -2358,7 +2391,7 @@ module.exports = class {
             if(tile === undefined) {
                 deferred.resolve();
             } else {
-                this.drawTile(tile, color);
+                tile.draw(color);
                 setTimeout(draw, timeout);
             }
         };
@@ -2368,13 +2401,10 @@ module.exports = class {
         return deferred.promise;
     }
 
-    drawTile(tile, color) {
-        this.canvas.fillStyle = color;
-        this.canvas.fillRect(tile.x, tile.y, tile.width, tile.height);
-    }
-
     /*** Solve maze ***/
     solve(start, end) {
+        //this.tiles = this.applyPath(this.path);
+
         const [visited, steps] = this.breadthFirstSearch(start, end);
 
         let solution = [];
@@ -2489,42 +2519,89 @@ module.exports = class {
         console.log(output);
     }
 };
-},{"q":2}],4:[function(require,module,exports){
+},{"./Tile.js":4,"q":2}],4:[function(require,module,exports){
+const colors = {
+    0: 'white',
+    1: 'black'
+};
+
+module.exports = class {
+
+    constructor(canvas, type, x, y, width, height) {
+        this.canvas = canvas;
+
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+
+        this._highlighted = false;
+    }
+
+    draw(color) {
+        color = color || colors[this.type];
+
+        this.canvas.fillStyle = color;
+        this.canvas.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    highlight() {
+        this._highlighted = true;
+        this.draw('hotpink');
+    }
+
+    reset() {
+        this._highlighted = false;
+        this.draw();
+    }
+
+    setType(type) {
+        this.type = type;
+        this.draw();
+    }
+};
+},{}],5:[function(require,module,exports){
 (function () {
 
     const Maze = require('./Maze.js');
     const elements = {
         maze: document.getElementById('maze'),
 
-        // Generate
+        // Create
         height: document.getElementById('height'),
         width: document.getElementById('width'),
         start: document.getElementById('start'),
         finish: document.getElementById('finish'),
 
         createButton:  document.getElementById('create'),
+        startDrawingButton: document.getElementById('startDrawing'),
+        stopDrawingButton: document.getElementById('stopDrawing'),
+
+        // Generate
         generateButton:  document.getElementById('generate'),
+        clearPathButton:  document.getElementById('clearPath'),
 
         // Solve
         solveButton: document.getElementById('solve')
     };
 
     const settings = {
-            get height() {
-                return parseInt(elements.height.value) || 50;
-            },
-            get width() {
-                return parseInt(elements.width.value) || 50;
-            },
+        get height() {
+            return parseInt(elements.height.value) || 50;
+        },
+        get width() {
+            return parseInt(elements.width.value) || 50;
+        },
+        get start() {
+            return parseInt(elements.start.value) || 1;
+        },
+        get finish() {
+            // TODO: let user pick end point after generating
+            return parseInt(elements.finish.value) || 10199;
+        }
+    };
 
-            get start() {
-                return parseInt(elements.start.value) || 1;
-            },
-            get finish() {
-                // TODO: let user pick end point after generating
-                return parseInt(elements.finish.value) || 10199;
-            }
-        };
     let maze;
 
     function init() {
@@ -2532,25 +2609,59 @@ module.exports = class {
         elements.width.addEventListener('input', updateFinish);
 
         elements.createButton.addEventListener('click', start);
+        elements.startDrawingButton.addEventListener('click', startDrawing);
+        elements.stopDrawingButton.addEventListener('click', stopDrawing);
+
         elements.generateButton.addEventListener('click', generate);
+        elements.clearPathButton.addEventListener('click', clearPath);
         elements.solveButton.addEventListener('click', solve);
     }
 
     function start() {
         maze = new Maze(elements.maze, settings.width, settings.height);
+        enable(elements.startDrawingButton);
     }
 
     function generate() {
-        maze.generatePath('depthFirstSearch', settings.start, settings.finish);
+        enable(elements.solveButton);
+        enable(elements.clearPathButton);
 
-        elements.solveButton.removeAttribute('disabled');
+        maze.generatePath('depthFirstSearch', settings.start, settings.finish);
+    }
+
+    function clearPath() {
+        disable(elements.clearPathButton);
+
+        maze.resetGeneratedPath();
+    }
+
+    function startDrawing() {
+        enable(elements.stopDrawingButton);
+        disable(elements.startDrawingButton);
+        disable(elements.createButton);
+        disable(elements.generateButton);
+        disable(elements.solveButton);
+
+        maze.resetGeneratedPath();
+        maze.startDrawing();
+    }
+
+    function stopDrawing() {
+        disable(elements.stopDrawingButton);
+        enable(elements.startDrawingButton);
+        enable(elements.createButton);
+        enable(elements.generateButton);
+        enable(elements.solveButton);
+
+        maze.resetGeneratedPath();
+        maze.stopDrawing();
     }
 
     function solve() {
-        elements.solveButton.setAttribute('disabled', 'disabled');
+        disable(elements.solveButton);
 
         maze.solve(settings.start, settings.finish).then(() => {
-            elements.solveButton.removeAttribute('disabled');
+            enable(elements.solveButton);
         });
     }
 
@@ -2558,6 +2669,14 @@ module.exports = class {
         elements.finish.value = (settings.width * 2 + 1) * (settings.height * 2 + 1) - 2;
     }
 
+    function disable(element) {
+        element.setAttribute('disabled', 'disabled');
+    }
+
+    function enable(element) {
+        element.removeAttribute('disabled');
+    }
+
     init();
 }());
-},{"./Maze.js":3}]},{},[4]);
+},{"./Maze.js":3}]},{},[5]);

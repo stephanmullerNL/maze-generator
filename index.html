@@ -6,7 +6,7 @@
         <h1>Maze Generator</h1>
 
         <section>
-            <h2>Generate maze</h2>
+            <h2>Create maze</h2>
             <div class="clearfix">
                 <label>
                     Width: <input type="text" value="10" id="width">
@@ -18,11 +18,18 @@
                     Start: <input type="text" value="1" id="start">
                 </label>
                 <label>
-                    Finish: <input type="text" value="439" id="finish">
+                    Finish: <input type="text" value="439" id="finish" readonly="readonly">
                 </label>
             </div>
             <button id="create">Create new maze</button>
+            <button id="startDrawing" disabled="disabled">Draw your own path</button>
+            <button id="stopDrawing" disabled="disabled">Stop drawing</button>
+        </section>
+
+        <section>
+            <h2>Generate path</h2>
             <button id="generate">Generate path</button>
+            <button id="clearPath" disabled="disabled">Clear path</button>
         </section>
 
         <section>

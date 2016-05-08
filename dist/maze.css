@@ -32,6 +32,10 @@ input[type="text"] {
     width: 50px;
 }
 
+canvas {
+    cursor: crosshair;
+}
+
 footer {
     background: #eee;
     font-size: 1.6em;

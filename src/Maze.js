@@ -1,10 +1,12 @@
 const q = require('q');
+const Tile = require('./Tile.js');
 
 // TODO: implement weakmaps?
 const PATH = 0;
 const WALL = 1;
 
 let directions;
+let events;
 
 module.exports = class {
 
@@ -28,12 +30,14 @@ module.exports = class {
             down: this.columns
         };
 
-        this.renderMaze();
+        events = {
+            mousedown: (event) => this.onMouseDown(event),
+            mouseup: (event) => this.onMouseUp(event),
+            mousemove: (event) => this.onMouseMove(event),
+            contextmenu: (event) => event.preventDefault()
+        };
 
-        element.addEventListener('mousedown', (event) => this.startDrawing(event));
-        element.addEventListener('mouseup', (event) => this.stopDrawing(event));
-        element.addEventListener('mousemove', (event) => this.drawPath(event));
-        element.addEventListener('contextmenu', (event) => event.preventDefault());
+        this.renderMaze();
     }
 
     createTiles(width, height) {
@@ -49,13 +53,16 @@ module.exports = class {
             const col = this.getColumn(i);
             const row = this.getRow(i);
 
-            tiles.push({
-                type: WALL,
-                x: (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
-                y: (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
-                width: (col % 2) ? roomSize : wallSize,
-                height: (row % 2) ? roomSize : wallSize
-            });
+            const tile = new Tile(
+                this.canvas,
+                WALL,
+                (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
+                (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
+                (col % 2) ? roomSize : wallSize,
+                (row % 2) ? roomSize : wallSize
+            );
+
+            tiles.push(tile);
         }
 
         return tiles;
@@ -63,25 +70,58 @@ module.exports = class {
 
 
     /*** Draw custom maze ***/
-    drawPath(event) {
-        if(this._drawType !== null) {
-            const x = event.pageX - this.element.offsetLeft;
-            const y = event.pageY - this.element.offsetTop;
-
-            let tile = this.getTileFromCoordinates(x, y);
-            let tileIndex = this.tiles.indexOf(tile);
-            let color = ['white', 'black'][this._drawType];
-
-            console.log(tileIndex, tile);
-
-            if(this.customPath.indexOf(tileIndex) === -1) {
-                this.drawTile(tile, color);
-                this.customPath.push(tileIndex);
+    startDrawing() {
+        for(let event in events) {
+            if(events.hasOwnProperty(event)) {
+                this.element.addEventListener(event, events[event]);
             }
         }
     }
 
-    startDrawing() {
+    stopDrawing() {
+        for(let event in events) {
+            if(events.hasOwnProperty(event)) {
+                this.element.removeEventListener(event, events[event]);
+            }
+        }
+    }
+
+    onMouseMove(event) {
+        this._mouseX = event.pageX - this.element.offsetLeft;
+        this._mouseY = event.pageY - this.element.offsetTop;
+
+        this.drawTile()
+    }
+
+    drawTile() {
+        let tile = this.getTileFromCoordinates(this._mouseX, this._mouseY);
+        let tileIndex = this.tiles.indexOf(tile);
+        let pathIndex = this.customPath.indexOf(tileIndex);
+
+        if(this._highlighted) {
+            this._highlighted.reset();
+        }
+
+        // TODO: Refactor this shit
+        if(this._drawType !== null) {
+            if (pathIndex === -1) {
+                if(this._drawType === 0) {
+                    this.customPath.push(tileIndex);
+                } else {
+                    this.customPath = this.customPath.splice(pathIndex, 1);
+                }
+            } else if(this._drawType === 0) {
+                this.customPath[pathIndex] = tileIndex;
+            }
+
+            tile.setType(this._drawType);
+        } else {
+            this._highlighted = tile;
+            tile.highlight();
+        }
+    }
+
+    onMouseDown() {
         if(event.which === 3) {
             event.preventDefault();
             this._drawType = WALL;
@@ -90,7 +130,8 @@ module.exports = class {
         }
     }
 
-    stopDrawing() {
+    onMouseUp() {
+        this.drawTile();
         this._drawType = null;
     }
 
@@ -105,9 +146,6 @@ module.exports = class {
 
         this.renderMaze();
         this.renderPath(this.path, 'white', 5);
-
-        //this.path = path;
-        this.tiles = this.applyPath(this.path);
     }
 
     depthFirstSearch(from, path = []) {
@@ -184,20 +222,15 @@ module.exports = class {
         return array[rnd];
     }
 
+    resetGeneratedPath() {
+        this.renderMaze();
+        this.renderPath(this.customPath, 'white', 0);
+    }
+
     /*** Render maze ***/
     renderMaze() {
         this.canvas.clearRect(0, 0, this.element.width, this.element.height);
-
-        this.tiles.forEach((tile, index) => {
-            // TODO: color map as private const
-            let color = ['white', 'black'][tile.type];
-
-            if(tile.type === WALL && !this.isWall(index)) {
-                color = '#444';
-            }
-
-            this.drawTile(tile, color);
-        });
+        this.tiles.forEach((tile) => tile.draw());
     }
 
     renderPath(path, color, timeout) {
@@ -212,7 +245,7 @@ module.exports = class {
             if(tile === undefined) {
                 deferred.resolve();
             } else {
-                this.drawTile(tile, color);
+                tile.draw(color);
                 setTimeout(draw, timeout);
             }
         };
@@ -222,13 +255,10 @@ module.exports = class {
         return deferred.promise;
     }
 
-    drawTile(tile, color) {
-        this.canvas.fillStyle = color;
-        this.canvas.fillRect(tile.x, tile.y, tile.width, tile.height);
-    }
-
     /*** Solve maze ***/
     solve(start, end) {
+        //this.tiles = this.applyPath(this.path);
+
         const [visited, steps] = this.breadthFirstSearch(start, end);
 
         let solution = [];
