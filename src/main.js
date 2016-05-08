@@ -11,8 +11,6 @@
         finish: document.getElementById('finish'),
 
         createButton:  document.getElementById('create'),
-        startDrawingButton: document.getElementById('startDrawing'),
-        stopDrawingButton: document.getElementById('stopDrawing'),
 
         // Generate
         generateButton:  document.getElementById('generate'),
@@ -45,52 +43,26 @@
         elements.width.addEventListener('input', updateFinish);
 
         elements.createButton.addEventListener('click', start);
-        elements.startDrawingButton.addEventListener('click', startDrawing);
-        elements.stopDrawingButton.addEventListener('click', stopDrawing);
 
         elements.generateButton.addEventListener('click', generate);
-        elements.clearPathButton.addEventListener('click', clearPath);
         elements.solveButton.addEventListener('click', solve);
     }
 
     function start() {
         maze = new Maze(elements.maze, settings.width, settings.height);
-        enable(elements.startDrawingButton);
+
+        enable(elements.generateButton);
+        disable(elements.solveButton);
     }
 
     function generate() {
-        enable(elements.solveButton);
-        enable(elements.clearPathButton);
-
-        maze.generatePath('depthFirstSearch', settings.start, settings.finish);
-    }
-
-    function clearPath() {
-        disable(elements.clearPathButton);
-
-        maze.resetGeneratedPath();
-    }
-
-    function startDrawing() {
-        enable(elements.stopDrawingButton);
-        disable(elements.startDrawingButton);
-        disable(elements.createButton);
         disable(elements.generateButton);
         disable(elements.solveButton);
 
-        maze.resetGeneratedPath();
-        maze.startDrawing();
-    }
-
-    function stopDrawing() {
-        disable(elements.stopDrawingButton);
-        enable(elements.startDrawingButton);
-        enable(elements.createButton);
-        enable(elements.generateButton);
-        enable(elements.solveButton);
-
-        maze.resetGeneratedPath();
-        maze.stopDrawing();
+        maze.generatePath('depthFirstSearch', settings.start, settings.finish).then(() => {
+            enable(elements.generateButton);
+            enable(elements.solveButton)
+;        });
     }
 
     function solve() {

@@ -6,7 +6,6 @@ const PATH = 0;
 const WALL = 1;
 
 let directions;
-let events;
 
 module.exports = class {
 
@@ -20,21 +19,11 @@ module.exports = class {
         this.tiles = this.createTiles(width, height);
         this.path = [];
 
-        this.customPath = [];
-        this._drawType = null;
-
         directions = {
             left: -1,
             right: 1,
             up: -this.columns,
             down: this.columns
-        };
-
-        events = {
-            mousedown: (event) => this.onMouseDown(event),
-            mouseup: (event) => this.onMouseUp(event),
-            mousemove: (event) => this.onMouseMove(event),
-            contextmenu: (event) => event.preventDefault()
         };
 
         this.renderMaze();
@@ -68,84 +57,19 @@ module.exports = class {
         return tiles;
     }
 
-
-    /*** Draw custom maze ***/
-    startDrawing() {
-        for(let event in events) {
-            if(events.hasOwnProperty(event)) {
-                this.element.addEventListener(event, events[event]);
-            }
-        }
-    }
-
-    stopDrawing() {
-        for(let event in events) {
-            if(events.hasOwnProperty(event)) {
-                this.element.removeEventListener(event, events[event]);
-            }
-        }
-    }
-
-    onMouseMove(event) {
-        this._mouseX = event.pageX - this.element.offsetLeft;
-        this._mouseY = event.pageY - this.element.offsetTop;
-
-        this.drawTile()
-    }
-
-    drawTile() {
-        let tile = this.getTileFromCoordinates(this._mouseX, this._mouseY);
-        let tileIndex = this.tiles.indexOf(tile);
-        let pathIndex = this.customPath.indexOf(tileIndex);
-
-        if(this._highlighted) {
-            this._highlighted.reset();
-        }
-
-        // TODO: Refactor this shit
-        if(this._drawType !== null) {
-            if (pathIndex === -1) {
-                if(this._drawType === 0) {
-                    this.customPath.push(tileIndex);
-                } else {
-                    this.customPath = this.customPath.splice(pathIndex, 1);
-                }
-            } else if(this._drawType === 0) {
-                this.customPath[pathIndex] = tileIndex;
-            }
-
-            tile.setType(this._drawType);
-        } else {
-            this._highlighted = tile;
-            tile.highlight();
-        }
-    }
-
-    onMouseDown() {
-        if(event.which === 3) {
-            event.preventDefault();
-            this._drawType = WALL;
-        } else {
-            this._drawType = PATH;
-        }
-    }
-
-    onMouseUp() {
-        this.drawTile();
-        this._drawType = null;
-    }
-
-
     /*** Generate maze path ***/
     generatePath(algorithm, start, end) {
-        let direction = this.getAllowedDirections(start)[0];
-        let firstRoom = this.getNextTile(start, direction);
-        let initialPath = [start, firstRoom, end].concat(this.customPath);
+        const deferred = q.defer();
+        const direction = this.getAllowedDirections(start)[0];
+        const firstRoom = this.getNextTile(start, direction);
+        const initialPath = [start, firstRoom, end];
 
         this.path = this[algorithm](firstRoom, initialPath);
 
         this.renderMaze();
-        this.renderPath(this.path, 'white', 5);
+        this.renderPath(this.path, 'white', 5).then(() => deferred.resolve());
+
+        return deferred.promise;
     }
 
     depthFirstSearch(from, path = []) {
@@ -222,15 +146,12 @@ module.exports = class {
         return array[rnd];
     }
 
-    resetGeneratedPath() {
-        this.renderMaze();
-        this.renderPath(this.customPath, 'white', 0);
-    }
-
     /*** Render maze ***/
-    renderMaze() {
+    renderMaze(path) {
+        const tiles = path ? this.applyPath(path) : this.tiles;
+
         this.canvas.clearRect(0, 0, this.element.width, this.element.height);
-        this.tiles.forEach((tile) => tile.draw());
+        tiles.forEach((tile) => tile.draw());
     }
 
     renderPath(path, color, timeout) {
@@ -257,7 +178,7 @@ module.exports = class {
 
     /*** Solve maze ***/
     solve(start, end) {
-        //this.tiles = this.applyPath(this.path);
+        this.renderMaze(this.path);
 
         const [visited, steps] = this.breadthFirstSearch(start, end);
 
@@ -273,7 +194,6 @@ module.exports = class {
             return this.renderPath(solution, 'red', 10);
         });
     }
-
 
     breadthFirstSearch(start, end) {
         let queue = [start];
@@ -328,15 +248,6 @@ module.exports = class {
         return Math.floor((tile) / this.columns);
     }
 
-    getTileFromCoordinates(x, y) {
-        return this.tiles.find((tile) => {
-            return tile.x <= x &&
-                    tile.y <= y &&
-                    tile.x + tile.width >= x &&
-                    tile.y + tile.height >= y;
-        });
-    }
-
     isAdjacent(tile, next) {
         return this.getRow(tile) === this.getRow(next) || this.getColumn(tile) === this.getColumn(next);
     }
@@ -351,11 +262,6 @@ module.exports = class {
                 this.getRow(tile) > this.rows - 1 ||
                 this.getColumn(tile) > this.columns - 1;
     }
-
-    isWall(tile) {
-        return this.getColumn(tile) % 2 === 0 || this.getRow(tile) % 2 === 0;
-    }
-
 
     /*** Debug ***/
     _logMaze(path = []) {

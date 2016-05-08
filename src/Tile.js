@@ -20,6 +20,10 @@ module.exports = class {
     draw(color) {
         color = color || colors[this.type];
 
+        if(this.width === this.height && color === 'black') {
+            color = '#333';
+        }
+
         this.canvas.fillStyle = color;
         this.canvas.fillRect(this.x, this.y, this.width, this.height);
     }
