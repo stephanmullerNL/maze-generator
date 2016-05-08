@@ -1,10 +1,6 @@
 const q = require('q');
 const Tile = require('./Tile.js');
 
-// TODO: implement weakmaps?
-const PATH = 0;
-const WALL = 1;
-
 let directions;
 
 module.exports = class {
@@ -44,7 +40,7 @@ module.exports = class {
 
             const tile = new Tile(
                 this.canvas,
-                WALL,
+                0,
                 (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
                 (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
                 (col % 2) ? roomSize : wallSize,
@@ -58,16 +54,16 @@ module.exports = class {
     }
 
     /*** Generate maze path ***/
-    generatePath(algorithm, start, end) {
+    generatePath(start, end) {
         const deferred = q.defer();
         const direction = this.getAllowedDirections(start)[0];
         const firstRoom = this.getNextTile(start, direction);
         const initialPath = [start, firstRoom, end];
 
-        this.path = this[algorithm](firstRoom, initialPath);
+        this.path = this.depthFirstSearch(firstRoom, initialPath);
 
         this.renderMaze();
-        this.renderPath(this.path, 'white', 5).then(() => deferred.resolve());
+        this.renderPath(this.path, 'white').then(() => deferred.resolve());
 
         return deferred.promise;
     }
@@ -147,17 +143,18 @@ module.exports = class {
     }
 
     /*** Render maze ***/
-    renderMaze(path) {
-        const tiles = path ? this.applyPath(path) : this.tiles;
-
+    renderMaze(path = []) {
         this.canvas.clearRect(0, 0, this.element.width, this.element.height);
-        tiles.forEach((tile) => tile.draw());
+        this.tiles.forEach((tile) => tile.draw());
+
+        path.forEach((tileId) => {
+            this.tiles[tileId].draw('white');
+        })
     }
 
-    renderPath(path, color, timeout) {
-        let deferred = q.defer();
-
-        path = [].concat(path);
+    renderPath(path, color) {
+        const deferred = q.defer();
+        const timeout = Math.floor(100 / (this.columns / 2));
 
         const draw = () => {
             const tileIndex = path.shift();
@@ -170,6 +167,9 @@ module.exports = class {
                 setTimeout(draw, timeout);
             }
         };
+
+        // Create a copy to preserve the original when using shift()
+        path = [].concat(path);
 
         draw();
 
@@ -190,8 +190,8 @@ module.exports = class {
             solution.push(tile);
         } while (tile = steps[tile]);
 
-        return this.renderPath(visited, '#f99', 5).then(() =>{
-            return this.renderPath(solution, 'red', 10);
+        return this.renderPath(visited, '#f99').then(() =>{
+            return this.renderPath(solution, 'red');
         });
     }
 
@@ -230,16 +230,6 @@ module.exports = class {
     }
 
     /*** Helpers ***/
-    applyPath(path) {
-        let tiles = this.tiles;
-
-        path.forEach((tile) => {
-            tiles[tile].type = PATH;
-        });
-
-        return tiles;
-    }
-
     getColumn(tile) {
         return Math.floor(tile % this.columns);
     }
@@ -257,25 +247,9 @@ module.exports = class {
     }
 
     isEdge(tile) {
-        return  this.getRow(tile) < 1 ||
-                this.getColumn(tile) < 1 ||
-                this.getRow(tile) > this.rows - 1 ||
-                this.getColumn(tile) > this.columns - 1;
-    }
-
-    /*** Debug ***/
-    _logMaze(path = []) {
-        let maze = this.applyPath(path);
-        let output = '';
-
-        maze.forEach((tile, i) => {
-            output += tile.type;
-
-            if((i + 1) % this.columns === 0) {
-                output += '\n';
-            }
-        });
-
-        console.log(output);
+        return this.getRow(tile) < 1 ||
+            this.getColumn(tile) < 1 ||
+            this.getRow(tile) > this.rows - 1 ||
+            this.getColumn(tile) > this.columns - 1;
     }
 };

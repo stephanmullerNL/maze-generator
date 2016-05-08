@@ -14,10 +14,8 @@ section {
     background: #eee;
     border: 1px solid #999;
     box-sizing: border-box;
-    float: left;
     padding: 1em;
     margin: 1em;
-    width: calc(250px - 2em);
 }
 
 label {
@@ -25,7 +23,7 @@ label {
     float: left;
     margin-right: 1em;
     margin-bottom: 1em;
-    width: calc(50% - 2em);
+    width: calc(25% - 2em);
 }
 
 input[type="text"] {

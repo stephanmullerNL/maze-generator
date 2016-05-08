@@ -59,7 +59,7 @@
         disable(elements.generateButton);
         disable(elements.solveButton);
 
-        maze.generatePath('depthFirstSearch', settings.start, settings.finish).then(() => {
+        maze.generatePath(settings.start, settings.finish).then(() => {
             enable(elements.generateButton);
             enable(elements.solveButton)
 ;        });
@@ -67,9 +67,11 @@
 
     function solve() {
         disable(elements.solveButton);
+        disable(elements.generateButton);
 
         maze.solve(settings.start, settings.finish).then(() => {
             enable(elements.solveButton);
+            enable(elements.generateButton);
         });
     }
 
