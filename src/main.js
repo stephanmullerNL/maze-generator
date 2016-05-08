@@ -49,6 +49,10 @@
     }
 
     function start() {
+        if(maze) {
+            maze.stopDrawing();
+        }
+
         maze = new Maze(elements.maze, settings.width, settings.height);
 
         enable(elements.generateButton);

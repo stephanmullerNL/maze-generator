@@ -162,7 +162,7 @@ module.exports = class {
 
             if(tile === undefined) {
                 deferred.resolve();
-            } else {
+            } else if(!this._stopped) {
                 tile.draw(color);
                 setTimeout(draw, timeout);
             }
@@ -174,6 +174,10 @@ module.exports = class {
         draw();
 
         return deferred.promise;
+    }
+
+    stopDrawing() {
+        this._stopped = true;
     }
 
     /*** Solve maze ***/
