@@ -35,59 +35,62 @@ const settings = {
     }
 };
 
-let maze;
+function UI() {
+    let maze;
 
-function init() {
-    elements.height.addEventListener('input', updateFinish);
-    elements.width.addEventListener('input', updateFinish);
+    function init() {
+        elements.height.addEventListener('input', updateFinish);
+        elements.width.addEventListener('input', updateFinish);
 
-    elements.createButton.addEventListener('click', start);
+        elements.createButton.addEventListener('click', start);
 
-    elements.generateButton.addEventListener('click', generate);
-    elements.solveButton.addEventListener('click', solve);
-}
-
-function start() {
-    if(maze) {
-        maze.stopDrawing();
+        elements.generateButton.addEventListener('click', generate);
+        elements.solveButton.addEventListener('click', solve);
     }
 
-    maze = new Maze(elements.maze, settings.width, settings.height);
+    function start() {
+        if(maze) {
+            maze.stopDrawing();
+        }
 
-    enable(elements.generateButton);
-    disable(elements.solveButton);
-}
+        maze = new Maze(elements.maze, settings.width, settings.height);
 
-function generate() {
-    disable(elements.generateButton);
-    disable(elements.solveButton);
-
-    maze.generatePath(settings.start, settings.finish).then(() => {
         enable(elements.generateButton);
-        enable(elements.solveButton)
-;        });
+        disable(elements.solveButton);
+    }
+
+    function generate() {
+        disable(elements.generateButton);
+        disable(elements.solveButton);
+
+        maze.generatePath(settings.start, settings.finish).then(() => {
+            enable(elements.generateButton);
+            enable(elements.solveButton)
+            ;        });
+    }
+
+    function solve() {
+        disable(elements.solveButton);
+        disable(elements.generateButton);
+
+        maze.solve(settings.start, settings.finish).then(() => {
+            enable(elements.solveButton);
+            enable(elements.generateButton);
+        });
+    }
+
+    function updateFinish() {
+        elements.finish.value = (settings.width * 2 + 1) * (settings.height * 2 + 1) - 2;
+    }
+
+    function disable(element) {
+        element.setAttribute('disabled', 'disabled');
+    }
+
+    function enable(element) {
+        element.removeAttribute('disabled');
+    }
+
+    init();
 }
-
-function solve() {
-    disable(elements.solveButton);
-    disable(elements.generateButton);
-
-    maze.solve(settings.start, settings.finish).then(() => {
-        enable(elements.solveButton);
-        enable(elements.generateButton);
-    });
-}
-
-function updateFinish() {
-    elements.finish.value = (settings.width * 2 + 1) * (settings.height * 2 + 1) - 2;
-}
-
-function disable(element) {
-    element.setAttribute('disabled', 'disabled');
-}
-
-function enable(element) {
-    element.removeAttribute('disabled');
-}
-
-init();
+UI();

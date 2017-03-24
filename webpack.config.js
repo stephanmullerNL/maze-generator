@@ -11,12 +11,23 @@ module.exports = {
         path: path.resolve(__dirname, './dist'),
         filename: '[name].bundle.js',
     },
-    module: {   
+    module: {
         rules: [{
             test: /\.css$/,
             loader:  ExtractTextPlugin.extract({
                 loader: 'css-loader?importLoaders=1',
             }),
+        }, {
+            test: /\.js$/,
+            include: path.resolve(__dirname, 'src'),
+            use: [{
+                loader: 'babel-loader',
+                options: {
+                    presets: [
+                        ['es2015', { modules: false }]
+                    ]
+                }
+            }]
         }],
     },
     plugins: [
