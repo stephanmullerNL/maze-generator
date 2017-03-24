@@ -27,19 +27,4 @@ export default class Tile {
         this.canvas.fillStyle = color;
         this.canvas.fillRect(this.x, this.y, this.width, this.height);
     }
-
-    highlight() {
-        this._highlighted = true;
-        this.draw('hotpink');
-    }
-
-    reset() {
-        this._highlighted = false;
-        this.draw();
-    }
-
-    setType(type) {
-        this.type = type;
-        this.draw();
-    }
 };

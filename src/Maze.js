@@ -1,10 +1,9 @@
 import Tile from './Tile';
 import Q from 'q';
 
-
 let directions;
 
-export default class {
+export default class Maze {
 
     constructor(element, width, height) {
         this.element = element;
@@ -170,7 +169,7 @@ export default class {
         };
 
         // Create a copy to preserve the original when using shift()
-        path = [].concat(path);
+        path = [...path];
 
         draw();
 
