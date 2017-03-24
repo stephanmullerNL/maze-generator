@@ -1,9 +1,10 @@
-const q = require('q');
-const Tile = require('./Tile.js');
+import Tile from './Tile';
+import Q from 'q';
+
 
 let directions;
 
-module.exports = class {
+export default class {
 
     constructor(element, width, height) {
         this.element = element;
@@ -55,7 +56,7 @@ module.exports = class {
 
     /*** Generate maze path ***/
     generatePath(start, end) {
-        const deferred = q.defer();
+        const deferred = Q.defer();
         const direction = this.getAllowedDirections(start)[0];
         const firstRoom = this.getNextTile(start, direction);
         const initialPath = [start, firstRoom, end];
@@ -153,7 +154,7 @@ module.exports = class {
     }
 
     renderPath(path, color) {
-        const deferred = q.defer();
+        const deferred = Q.defer();
         const timeout = Math.floor(100 / (this.columns / 2));
 
         const draw = () => {

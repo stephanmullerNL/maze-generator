@@ -1,13 +1,173 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-// shim for using process in browser
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+/******/
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// identity function for calling harmony imports with the correct context
+/******/ 	__webpack_require__.i = function(value) { return value; };
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ (function(module, exports) {
 
+// shim for using process in browser
 var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
 var queue = [];
 var draining = false;
 var currentQueue;
 var queueIndex = -1;
 
 function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
     draining = false;
     if (currentQueue.length) {
         queue = currentQueue.concat(queue);
@@ -23,7 +183,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = setTimeout(cleanUpNextTick);
+    var timeout = runTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -40,7 +200,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    clearTimeout(timeout);
+    runClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -52,7 +212,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        setTimeout(drainQueue, 0);
+        runTimeout(drainQueue);
     }
 };
 
@@ -91,13 +251,285 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],2:[function(require,module,exports){
-(function (process){
-// vim:ts=4:sts=4:sw=4:
+
+/***/ }),
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Tile__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_q__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_q___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_q__);
+
+
+
+
+let directions;
+
+/* harmony default export */ __webpack_exports__["a"] = (class {
+
+    constructor(element, width, height) {
+        this.element = element;
+        this.canvas = element.getContext('2d');
+
+        this.columns = width * 2 + 1;
+        this.rows = height * 2 + 1;
+
+        this.tiles = this.createTiles(width, height);
+        this.path = [];
+
+        directions = {
+            left: -1,
+            right: 1,
+            up: -this.columns,
+            down: this.columns
+        };
+
+        this.renderMaze();
+    }
+
+    createTiles(width, height) {
+        let tiles = [];
+
+        const amount = (width * 2 + 1) * (height * 2 + 1);
+        const maxDimension = Math.max(width, height);
+
+        const wallSize = Math.ceil(40 / maxDimension);
+        const roomSize = Math.floor((this.element.width - ((maxDimension + 1) * wallSize)) / maxDimension);
+
+        for(let i = 0; i < amount; i++) {
+            const col = this.getColumn(i);
+            const row = this.getRow(i);
+
+            const tile = new __WEBPACK_IMPORTED_MODULE_0__Tile__["a" /* default */](
+                this.canvas,
+                0,
+                (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
+                (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
+                (col % 2) ? roomSize : wallSize,
+                (row % 2) ? roomSize : wallSize
+            );
+
+            tiles.push(tile);
+        }
+
+        return tiles;
+    }
+
+    /*** Generate maze path ***/
+    generatePath(start, end) {
+        const deferred = __WEBPACK_IMPORTED_MODULE_1_q___default.a.defer();
+        const direction = this.getAllowedDirections(start)[0];
+        const firstRoom = this.getNextTile(start, direction);
+        const initialPath = [start, firstRoom, end];
+
+        this.path = this.depthFirstSearch(firstRoom, initialPath);
+
+        this.renderMaze();
+        this.renderPath(this.path, 'white').then(() => deferred.resolve());
+
+        return deferred.promise;
+    }
+
+    depthFirstSearch(from, path = []) {
+        const getDirections = (from) => {
+            let directions = this.getAllowedDirections(from, 2).filter((direction) => {
+                let [wall, room] = this.getNextTiles(from, direction, 2);
+
+                return path.indexOf(room) === -1 && !this.isEdge(wall);
+            });
+
+            return directions.length ? directions : null;
+        };
+
+        const walk = (from) => {
+            let allowedDirections;
+
+            /*jshint boss:true */
+            while(allowedDirections = getDirections(from)) {
+                let nextDirection = this.getRandom(allowedDirections);
+                let [wall, room] = this.getNextTiles(from, nextDirection, 2);
+
+                path.push(wall);
+                path.push(room);
+
+                walk(room);
+            }
+        };
+
+        try {
+            walk(from);
+        } catch (e) {
+            alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
+        }
+
+        return path;
+    }
+
+    getAllowedDirections(tile, step = 1) {
+        return Object.keys(directions).filter((direction) => {
+
+            let nextRoom = tile;
+
+            for(let i = 0; i < step; i++) {
+                nextRoom = this.getNextTile(nextRoom, direction);
+
+                if(this.isIntersection(nextRoom) || nextRoom > this.tiles.length) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }
+
+    getNextTile(tile, direction) {
+        let next = tile + directions[direction];
+
+        return this.isAdjacent(tile, next) ? next : null;
+    }
+
+    getNextTiles(tile, direction, amount) {
+        let tiles = [];
+
+        while((tile = this.getNextTile(tile, direction)) && amount--) {
+            tiles.push(tile);
+        }
+
+        return tiles;
+    }
+
+    // TODO: Add option for horizontal/vertical bias
+    getRandom(array) {
+        let rnd = Math.floor(Math.random() * array.length);
+        return array[rnd];
+    }
+
+    /*** Render maze ***/
+    renderMaze(path = []) {
+        this.canvas.clearRect(0, 0, this.element.width, this.element.height);
+        this.tiles.forEach((tile) => tile.draw());
+
+        path.forEach((tileId) => {
+            this.tiles[tileId].draw('white');
+        })
+    }
+
+    renderPath(path, color) {
+        const deferred = __WEBPACK_IMPORTED_MODULE_1_q___default.a.defer();
+        const timeout = Math.floor(100 / (this.columns / 2));
+
+        const draw = () => {
+            const tileIndex = path.shift();
+            const tile = this.tiles[tileIndex];
+
+            if(tile === undefined) {
+                deferred.resolve();
+            } else if(!this._stopped) {
+                tile.draw(color);
+                setTimeout(draw, timeout);
+            }
+        };
+
+        // Create a copy to preserve the original when using shift()
+        path = [].concat(path);
+
+        draw();
+
+        return deferred.promise;
+    }
+
+    stopDrawing() {
+        this._stopped = true;
+    }
+
+    /*** Solve maze ***/
+    solve(start, end) {
+        this.renderMaze(this.path);
+
+        const [visited, steps] = this.breadthFirstSearch(start, end);
+
+        let solution = [];
+        let tile = end;
+
+        /*jshint boss:true */
+        do {
+            solution.push(tile);
+        } while (tile = steps[tile]);
+
+        return this.renderPath(visited, '#f99').then(() =>{
+            return this.renderPath(solution, 'red');
+        });
+    }
+
+    breadthFirstSearch(start, end) {
+        let queue = [start];
+        let steps = {};
+        let visited = [start];
+        let tile;
+
+        const getTile = (direction) => this.getNextTile(tile, direction);
+        const unvisitedTiles = (tile) => visited.indexOf(tile) === -1 && this.path.indexOf(tile) > -1;
+
+        const visitNext = (nextTile) => {
+            steps[nextTile] = tile;
+            visited.push(nextTile);
+
+            if(nextTile === end) {
+                queue = [];
+            } else {
+                queue.push(nextTile);
+            }
+        };
+
+        // Mark starting point
+        steps[start] = null;
+
+        /*jshint boss:true */
+        while(tile = queue.shift()) {
+            this.getAllowedDirections(tile)
+                .map(getTile)
+                .filter(unvisitedTiles)
+                .forEach(visitNext);
+        }
+
+        return [visited, steps];
+    }
+
+    /*** Helpers ***/
+    getColumn(tile) {
+        return Math.floor(tile % this.columns);
+    }
+
+    getRow(tile) {
+        return Math.floor((tile) / this.columns);
+    }
+
+    isAdjacent(tile, next) {
+        return this.getRow(tile) === this.getRow(next) || this.getColumn(tile) === this.getColumn(next);
+    }
+
+    isIntersection(tile) {
+        return this.getRow(tile) % 2 === 0 && this.getColumn(tile) % 2 === 0;
+    }
+
+    isEdge(tile) {
+        return this.getRow(tile) < 1 ||
+            this.getColumn(tile) < 1 ||
+            this.getRow(tile) > this.rows - 1 ||
+            this.getColumn(tile) > this.columns - 1;
+    }
+});;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process, setImmediate) {// vim:ts=4:sts=4:sw=4:
 /*!
  *
- * Copyright 2009-2012 Kris Kowal under the terms of the MIT
- * license found at http://github.com/kriskowal/q/raw/master/LICENSE
+ * Copyright 2009-2017 Kris Kowal under the terms of the MIT
+ * license found at https://github.com/kriskowal/q/blob/v1/LICENSE
  *
  * With parts by Tyler Close
  * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
@@ -134,7 +566,7 @@ process.umask = function() { return 0; };
         bootstrap("promise", definition);
 
     // CommonJS
-    } else if (typeof exports === "object" && typeof module === "object") {
+    } else if (true) {
         module.exports = definition();
 
     // RequireJS
@@ -285,7 +717,7 @@ var nextTick =(function () {
         //   `setTimeout`. In this case `setImmediate` is preferred because
         //    it is faster. Browserify's `process.toString()` yields
         //   "[object Object]", while in a real Node environment
-        //   `process.nextTick()` yields "[object process]".
+        //   `process.toString()` yields "[object process]".
         isNodeJS = true;
 
         requestTick = function () {
@@ -422,6 +854,11 @@ var object_create = Object.create || function (prototype) {
     return new Type();
 };
 
+var object_defineProperty = Object.defineProperty || function (obj, prop, descriptor) {
+    obj[prop] = descriptor.value;
+    return obj;
+};
+
 var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
 
 var object_keys = Object.keys || function (object) {
@@ -472,19 +909,20 @@ function makeStackTraceLong(error, promise) {
         promise.stack &&
         typeof error === "object" &&
         error !== null &&
-        error.stack &&
-        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
+        error.stack
     ) {
         var stacks = [];
         for (var p = promise; !!p; p = p.source) {
-            if (p.stack) {
+            if (p.stack && (!error.__minimumStackCounter__ || error.__minimumStackCounter__ > p.stackCounter)) {
+                object_defineProperty(error, "__minimumStackCounter__", {value: p.stackCounter, configurable: true});
                 stacks.unshift(p.stack);
             }
         }
         stacks.unshift(error.stack);
 
         var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
-        error.stack = filterStackString(concatedStacks);
+        var stack = filterStackString(concatedStacks);
+        object_defineProperty(error, "stack", {value: stack, configurable: true});
     }
 }
 
@@ -611,6 +1049,14 @@ Q.nextTick = nextTick;
  */
 Q.longStackSupport = false;
 
+/**
+ * The counter is used to determine the stopping point for building
+ * long stack traces. In makeStackTraceLong we walk backwards through
+ * the linked list of promises, only stacks which were created before
+ * the rejection are concatenated.
+ */
+var longStackCounter = 1;
+
 // enable long stacks if Q_DEBUG is set
 if (typeof process === "object" && process && process.env && process.env.Q_DEBUG) {
     Q.longStackSupport = true;
@@ -683,6 +1129,7 @@ function defer() {
             // At the same time, cut off the first line; it's always just
             // "[object Promise]\n", as per the `toString`.
             promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
+            promise.stackCounter = longStackCounter++;
         }
     }
 
@@ -692,7 +1139,12 @@ function defer() {
 
     function become(newPromise) {
         resolvedPromise = newPromise;
-        promise.source = newPromise;
+
+        if (Q.longStackSupport && hasStacks) {
+            // Only hold a reference to the new promise if long stacks
+            // are enabled to reduce memory usage
+            promise.source = newPromise;
+        }
 
         array_reduce(messages, function (undefined, message) {
             Q.nextTick(function () {
@@ -820,7 +1272,7 @@ Promise.prototype.join = function (that) {
             // TODO: "===" should be Object.is or equiv
             return x;
         } else {
-            throw new Error("Can't join: not the same: " + x + " " + y);
+            throw new Error("Q can't join: not the same: " + x + " " + y);
         }
     });
 };
@@ -1717,13 +2169,12 @@ function any(promises) {
         function onFulfilled(result) {
             deferred.resolve(result);
         }
-        function onRejected() {
+        function onRejected(err) {
             pendingCount--;
             if (pendingCount === 0) {
-                deferred.reject(new Error(
-                    "Can't get fulfillment value from any promise, all " +
-                    "promises were rejected."
-                ));
+                err.message = ("Q can't get fulfillment value from any promise, all " +
+                    "promises were rejected. Last error message: " + err.message);
+                deferred.reject(err);
             }
         }
         function onProgress(progress) {
@@ -1847,6 +2298,9 @@ Q["finally"] = function (object, callback) {
 
 Promise.prototype.fin = // XXX legacy
 Promise.prototype["finally"] = function (callback) {
+    if (!callback || typeof callback.apply !== "function") {
+        throw new Error("Q can't apply finally callback");
+    }
     callback = Q(callback);
     return this.then(function (value) {
         return callback.fcall().then(function () {
@@ -2010,6 +2464,9 @@ Promise.prototype.nfcall = function (/*...args*/) {
  */
 Q.nfbind =
 Q.denodeify = function (callback /*...args*/) {
+    if (callback === undefined) {
+        throw new Error("Q can't wrap an undefined function");
+    }
     var baseArgs = array_slice(arguments, 1);
     return function () {
         var nodeArgs = baseArgs.concat(array_slice(arguments));
@@ -2142,274 +2599,298 @@ return Q;
 
 });
 
-}).call(this,require('_process'))
-},{"_process":1}],3:[function(require,module,exports){
-const q = require('q');
-const Tile = require('./Tile.js');
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(4).setImmediate))
 
-let directions;
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = class {
+/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
+    "use strict";
 
-    constructor(element, width, height) {
-        this.element = element;
-        this.canvas = element.getContext('2d');
-
-        this.columns = width * 2 + 1;
-        this.rows = height * 2 + 1;
-
-        this.tiles = this.createTiles(width, height);
-        this.path = [];
-
-        directions = {
-            left: -1,
-            right: 1,
-            up: -this.columns,
-            down: this.columns
-        };
-
-        this.renderMaze();
+    if (global.setImmediate) {
+        return;
     }
 
-    createTiles(width, height) {
-        let tiles = [];
+    var nextHandle = 1; // Spec says greater than zero
+    var tasksByHandle = {};
+    var currentlyRunningATask = false;
+    var doc = global.document;
+    var registerImmediate;
 
-        const amount = (width * 2 + 1) * (height * 2 + 1);
-        const maxDimension = Math.max(width, height);
+    function setImmediate(callback) {
+      // Callback can either be a function or a string
+      if (typeof callback !== "function") {
+        callback = new Function("" + callback);
+      }
+      // Copy function arguments
+      var args = new Array(arguments.length - 1);
+      for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i + 1];
+      }
+      // Store and register the task
+      var task = { callback: callback, args: args };
+      tasksByHandle[nextHandle] = task;
+      registerImmediate(nextHandle);
+      return nextHandle++;
+    }
 
-        const wallSize = Math.ceil(40 / maxDimension);
-        const roomSize = Math.floor((this.element.width - ((maxDimension + 1) * wallSize)) / maxDimension);
+    function clearImmediate(handle) {
+        delete tasksByHandle[handle];
+    }
 
-        for(let i = 0; i < amount; i++) {
-            const col = this.getColumn(i);
-            const row = this.getRow(i);
-
-            const tile = new Tile(
-                this.canvas,
-                0,
-                (Math.ceil(col / 2) * wallSize) + (Math.ceil(col / 2) - col % 2) * roomSize,
-                (Math.ceil(row / 2) * wallSize) + (Math.ceil(row / 2) - row % 2) * roomSize,
-                (col % 2) ? roomSize : wallSize,
-                (row % 2) ? roomSize : wallSize
-            );
-
-            tiles.push(tile);
+    function run(task) {
+        var callback = task.callback;
+        var args = task.args;
+        switch (args.length) {
+        case 0:
+            callback();
+            break;
+        case 1:
+            callback(args[0]);
+            break;
+        case 2:
+            callback(args[0], args[1]);
+            break;
+        case 3:
+            callback(args[0], args[1], args[2]);
+            break;
+        default:
+            callback.apply(undefined, args);
+            break;
         }
-
-        return tiles;
     }
 
-    /*** Generate maze path ***/
-    generatePath(start, end) {
-        const deferred = q.defer();
-        const direction = this.getAllowedDirections(start)[0];
-        const firstRoom = this.getNextTile(start, direction);
-        const initialPath = [start, firstRoom, end];
-
-        this.path = this.depthFirstSearch(firstRoom, initialPath);
-
-        this.renderMaze();
-        this.renderPath(this.path, 'white').then(() => deferred.resolve());
-
-        return deferred.promise;
-    }
-
-    depthFirstSearch(from, path = []) {
-        const getDirections = (from) => {
-            let directions = this.getAllowedDirections(from, 2).filter((direction) => {
-                let [wall, room] = this.getNextTiles(from, direction, 2);
-
-                return path.indexOf(room) === -1 && !this.isEdge(wall);
-            });
-
-            return directions.length ? directions : null;
-        };
-
-        const walk = (from) => {
-            let allowedDirections;
-
-            /*jshint boss:true */
-            while(allowedDirections = getDirections(from)) {
-                let nextDirection = this.getRandom(allowedDirections);
-                let [wall, room] = this.getNextTiles(from, nextDirection, 2);
-
-                path.push(wall);
-                path.push(room);
-
-                walk(room);
-            }
-        };
-
-        try {
-            walk(from);
-        } catch (e) {
-            alert(e + "\n\nTry generating a smaller maze or use the stacked approach (coming soon)");
-        }
-
-        return path;
-    }
-
-    getAllowedDirections(tile, step = 1) {
-        return Object.keys(directions).filter((direction) => {
-
-            let nextRoom = tile;
-
-            for(let i = 0; i < step; i++) {
-                nextRoom = this.getNextTile(nextRoom, direction);
-
-                if(this.isIntersection(nextRoom) || nextRoom > this.tiles.length) {
-                    return false;
+    function runIfPresent(handle) {
+        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+        // So if we're currently running a task, we'll need to delay this invocation.
+        if (currentlyRunningATask) {
+            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+            // "too much recursion" error.
+            setTimeout(runIfPresent, 0, handle);
+        } else {
+            var task = tasksByHandle[handle];
+            if (task) {
+                currentlyRunningATask = true;
+                try {
+                    run(task);
+                } finally {
+                    clearImmediate(handle);
+                    currentlyRunningATask = false;
                 }
             }
-
-            return true;
-        });
-    }
-
-    getNextTile(tile, direction) {
-        let next = tile + directions[direction];
-
-        return this.isAdjacent(tile, next) ? next : null;
-    }
-
-    getNextTiles(tile, direction, amount) {
-        let tiles = [];
-
-        while((tile = this.getNextTile(tile, direction)) && amount--) {
-            tiles.push(tile);
         }
-
-        return tiles;
     }
 
-    // TODO: Add option for horizontal/vertical bias
-    getRandom(array) {
-        let rnd = Math.floor(Math.random() * array.length);
-        return array[rnd];
+    function installNextTickImplementation() {
+        registerImmediate = function(handle) {
+            process.nextTick(function () { runIfPresent(handle); });
+        };
     }
 
-    /*** Render maze ***/
-    renderMaze(path = []) {
-        this.canvas.clearRect(0, 0, this.element.width, this.element.height);
-        this.tiles.forEach((tile) => tile.draw());
-
-        path.forEach((tileId) => {
-            this.tiles[tileId].draw('white');
-        })
+    function canUsePostMessage() {
+        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+        // where `global.postMessage` means something completely different and can't be used for this purpose.
+        if (global.postMessage && !global.importScripts) {
+            var postMessageIsAsynchronous = true;
+            var oldOnMessage = global.onmessage;
+            global.onmessage = function() {
+                postMessageIsAsynchronous = false;
+            };
+            global.postMessage("", "*");
+            global.onmessage = oldOnMessage;
+            return postMessageIsAsynchronous;
+        }
     }
 
-    renderPath(path, color) {
-        const deferred = q.defer();
-        const timeout = Math.floor(100 / (this.columns / 2));
+    function installPostMessageImplementation() {
+        // Installs an event handler on `global` for the `message` event: see
+        // * https://developer.mozilla.org/en/DOM/window.postMessage
+        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
 
-        const draw = () => {
-            const tileIndex = path.shift();
-            const tile = this.tiles[tileIndex];
-
-            if(tile === undefined) {
-                deferred.resolve();
-            } else if(!this._stopped) {
-                tile.draw(color);
-                setTimeout(draw, timeout);
+        var messagePrefix = "setImmediate$" + Math.random() + "$";
+        var onGlobalMessage = function(event) {
+            if (event.source === global &&
+                typeof event.data === "string" &&
+                event.data.indexOf(messagePrefix) === 0) {
+                runIfPresent(+event.data.slice(messagePrefix.length));
             }
         };
 
-        // Create a copy to preserve the original when using shift()
-        path = [].concat(path);
-
-        draw();
-
-        return deferred.promise;
-    }
-
-    stopDrawing() {
-        this._stopped = true;
-    }
-
-    /*** Solve maze ***/
-    solve(start, end) {
-        this.renderMaze(this.path);
-
-        const [visited, steps] = this.breadthFirstSearch(start, end);
-
-        let solution = [];
-        let tile = end;
-
-        /*jshint boss:true */
-        do {
-            solution.push(tile);
-        } while (tile = steps[tile]);
-
-        return this.renderPath(visited, '#f99').then(() =>{
-            return this.renderPath(solution, 'red');
-        });
-    }
-
-    breadthFirstSearch(start, end) {
-        let queue = [start];
-        let steps = {};
-        let visited = [start];
-        let tile;
-
-        const getTile = (direction) => this.getNextTile(tile, direction);
-        const unvisitedTiles = (tile) => visited.indexOf(tile) === -1 && this.path.indexOf(tile) > -1;
-
-        const visitNext = (nextTile) => {
-            steps[nextTile] = tile;
-            visited.push(nextTile);
-
-            if(nextTile === end) {
-                queue = [];
-            } else {
-                queue.push(nextTile);
-            }
-        };
-
-        // Mark starting point
-        steps[start] = null;
-
-        /*jshint boss:true */
-        while(tile = queue.shift()) {
-            this.getAllowedDirections(tile)
-                .map(getTile)
-                .filter(unvisitedTiles)
-                .forEach(visitNext);
+        if (global.addEventListener) {
+            global.addEventListener("message", onGlobalMessage, false);
+        } else {
+            global.attachEvent("onmessage", onGlobalMessage);
         }
 
-        return [visited, steps];
+        registerImmediate = function(handle) {
+            global.postMessage(messagePrefix + handle, "*");
+        };
     }
 
-    /*** Helpers ***/
-    getColumn(tile) {
-        return Math.floor(tile % this.columns);
+    function installMessageChannelImplementation() {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = function(event) {
+            var handle = event.data;
+            runIfPresent(handle);
+        };
+
+        registerImmediate = function(handle) {
+            channel.port2.postMessage(handle);
+        };
     }
 
-    getRow(tile) {
-        return Math.floor((tile) / this.columns);
+    function installReadyStateChangeImplementation() {
+        var html = doc.documentElement;
+        registerImmediate = function(handle) {
+            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+            var script = doc.createElement("script");
+            script.onreadystatechange = function () {
+                runIfPresent(handle);
+                script.onreadystatechange = null;
+                html.removeChild(script);
+                script = null;
+            };
+            html.appendChild(script);
+        };
     }
 
-    isAdjacent(tile, next) {
-        return this.getRow(tile) === this.getRow(next) || this.getColumn(tile) === this.getColumn(next);
+    function installSetTimeoutImplementation() {
+        registerImmediate = function(handle) {
+            setTimeout(runIfPresent, 0, handle);
+        };
     }
 
-    isIntersection(tile) {
-        return this.getRow(tile) % 2 === 0 && this.getColumn(tile) % 2 === 0;
+    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
+
+    // Don't get fooled by e.g. browserify environments.
+    if ({}.toString.call(global.process) === "[object process]") {
+        // For Node.js before 0.9
+        installNextTickImplementation();
+
+    } else if (canUsePostMessage()) {
+        // For non-IE10 modern browsers
+        installPostMessageImplementation();
+
+    } else if (global.MessageChannel) {
+        // For web workers, where supported
+        installMessageChannelImplementation();
+
+    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+        // For IE 6–8
+        installReadyStateChangeImplementation();
+
+    } else {
+        // For older browsers
+        installSetTimeoutImplementation();
     }
 
-    isEdge(tile) {
-        return this.getRow(tile) < 1 ||
-            this.getColumn(tile) < 1 ||
-            this.getRow(tile) > this.rows - 1 ||
-            this.getColumn(tile) > this.columns - 1;
-    }
+    attachTo.setImmediate = setImmediate;
+    attachTo.clearImmediate = clearImmediate;
+}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(0)))
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var apply = Function.prototype.apply;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function() {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
 };
-},{"./Tile.js":4,"q":2}],4:[function(require,module,exports){
+exports.setInterval = function() {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout =
+exports.clearInterval = function(timeout) {
+  if (timeout) {
+    timeout.close();
+  }
+};
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+Timeout.prototype.close = function() {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function(item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function(item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function(item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout)
+        item._onTimeout();
+    }, msecs);
+  }
+};
+
+// setimmediate attaches itself to the global object
+__webpack_require__(3);
+exports.setImmediate = setImmediate;
+exports.clearImmediate = clearImmediate;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 const colors = {
     0: 'black',
     1: 'white'
 };
 
-module.exports = class {
+class Tile {
 
     constructor(canvas, type, x, y, width, height) {
         this.canvas = canvas;
@@ -2448,101 +2929,110 @@ module.exports = class {
         this.type = type;
         this.draw();
     }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Tile;
+;
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Maze__ = __webpack_require__(1);
+
+
+const elements = {
+    maze: document.getElementById('maze'),
+
+    // Create
+    height: document.getElementById('height'),
+    width: document.getElementById('width'),
+    start: document.getElementById('start'),
+    finish: document.getElementById('finish'),
+
+    createButton:  document.getElementById('create'),
+
+    // Generate
+    generateButton:  document.getElementById('generate'),
+    clearPathButton:  document.getElementById('clearPath'),
+
+    // Solve
+    solveButton: document.getElementById('solve')
 };
-},{}],5:[function(require,module,exports){
-(function () {
 
-    const Maze = require('./Maze.js');
-    const elements = {
-        maze: document.getElementById('maze'),
+const settings = {
+    get height() {
+        return parseInt(elements.height.value) || 50;
+    },
+    get width() {
+        return parseInt(elements.width.value) || 50;
+    },
+    get start() {
+        return parseInt(elements.start.value) || 1;
+    },
+    get finish() {
+        // TODO: let user pick end point after generating
+        return parseInt(elements.finish.value) || 10199;
+    }
+};
 
-        // Create
-        height: document.getElementById('height'),
-        width: document.getElementById('width'),
-        start: document.getElementById('start'),
-        finish: document.getElementById('finish'),
+let maze;
 
-        createButton:  document.getElementById('create'),
+function init() {
+    elements.height.addEventListener('input', updateFinish);
+    elements.width.addEventListener('input', updateFinish);
 
-        // Generate
-        generateButton:  document.getElementById('generate'),
-        clearPathButton:  document.getElementById('clearPath'),
+    elements.createButton.addEventListener('click', start);
 
-        // Solve
-        solveButton: document.getElementById('solve')
-    };
+    elements.generateButton.addEventListener('click', generate);
+    elements.solveButton.addEventListener('click', solve);
+}
 
-    const settings = {
-        get height() {
-            return parseInt(elements.height.value) || 50;
-        },
-        get width() {
-            return parseInt(elements.width.value) || 50;
-        },
-        get start() {
-            return parseInt(elements.start.value) || 1;
-        },
-        get finish() {
-            // TODO: let user pick end point after generating
-            return parseInt(elements.finish.value) || 10199;
-        }
-    };
-
-    let maze;
-
-    function init() {
-        elements.height.addEventListener('input', updateFinish);
-        elements.width.addEventListener('input', updateFinish);
-
-        elements.createButton.addEventListener('click', start);
-
-        elements.generateButton.addEventListener('click', generate);
-        elements.solveButton.addEventListener('click', solve);
+function start() {
+    if(maze) {
+        maze.stopDrawing();
     }
 
-    function start() {
-        if(maze) {
-            maze.stopDrawing();
-        }
+    maze = new __WEBPACK_IMPORTED_MODULE_0__Maze__["a" /* default */](elements.maze, settings.width, settings.height);
 
-        maze = new Maze(elements.maze, settings.width, settings.height);
+    enable(elements.generateButton);
+    disable(elements.solveButton);
+}
 
+function generate() {
+    disable(elements.generateButton);
+    disable(elements.solveButton);
+
+    maze.generatePath(settings.start, settings.finish).then(() => {
         enable(elements.generateButton);
-        disable(elements.solveButton);
-    }
-
-    function generate() {
-        disable(elements.generateButton);
-        disable(elements.solveButton);
-
-        maze.generatePath(settings.start, settings.finish).then(() => {
-            enable(elements.generateButton);
-            enable(elements.solveButton)
+        enable(elements.solveButton)
 ;        });
-    }
+}
 
-    function solve() {
-        disable(elements.solveButton);
-        disable(elements.generateButton);
+function solve() {
+    disable(elements.solveButton);
+    disable(elements.generateButton);
 
-        maze.solve(settings.start, settings.finish).then(() => {
-            enable(elements.solveButton);
-            enable(elements.generateButton);
-        });
-    }
+    maze.solve(settings.start, settings.finish).then(() => {
+        enable(elements.solveButton);
+        enable(elements.generateButton);
+    });
+}
 
-    function updateFinish() {
-        elements.finish.value = (settings.width * 2 + 1) * (settings.height * 2 + 1) - 2;
-    }
+function updateFinish() {
+    elements.finish.value = (settings.width * 2 + 1) * (settings.height * 2 + 1) - 2;
+}
 
-    function disable(element) {
-        element.setAttribute('disabled', 'disabled');
-    }
+function disable(element) {
+    element.setAttribute('disabled', 'disabled');
+}
 
-    function enable(element) {
-        element.removeAttribute('disabled');
-    }
+function enable(element) {
+    element.removeAttribute('disabled');
+}
 
-    init();
-}());
-},{"./Maze.js":3}]},{},[5]);
+init();
+
+/***/ })
+/******/ ]);

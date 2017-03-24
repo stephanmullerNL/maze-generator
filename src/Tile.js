@@ -3,7 +3,7 @@ const colors = {
     1: 'white'
 };
 
-module.exports = class {
+export default class Tile {
 
     constructor(canvas, type, x, y, width, height) {
         this.canvas = canvas;
