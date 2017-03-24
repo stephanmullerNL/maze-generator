@@ -8,4 +8,5 @@ To be added:
  
  1. Clone the project
  2. run `npm install`
- 3. run `gulp` to build, watch and serve the project 
+ 3. run `npm start` to bundle everything and watch changes on your code
+ 4. open index.html in your browser to see the app
